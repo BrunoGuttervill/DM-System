@@ -37,7 +37,7 @@ export default function Sidebar() {
   return (
     <aside style={styles.sidebar}>
       <div style={styles.brand}>
-        <h1 style={styles.brandTitle}>🍝 MassaStock</h1>
+        <h1 style={styles.brandTitle}>🍝 Dany Massas</h1>
         <span style={styles.brandSub}>Controle de Estoque</span>
       </div>
 
