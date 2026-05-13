@@ -397,3 +397,45 @@ tbody td {
 }
 .stat-sub { font-size: 0.75rem; color: var(--cinza); }
 .stat-icon { position: absolute; right: 20px; top: 18px; font-size: 1.8rem; opacity: 0.12; }
+
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px 24px;
+  border: 1px solid var(--creme2);
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.stat-card.vinho::before  { background: var(--vinho); }
+.stat-card.terra::before  { background: var(--terra); }
+.stat-card.verde::before  { background: var(--verde); }
+.stat-card.amarelo::before{ background: var(--amarelo); }
+
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--cinza);
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  color: var(--escuro);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-sub  { font-size: 0.75rem; color: var(--cinza); }
+.stat-icon {
+  position: absolute;
+  right: 20px; top: 18px;
+  font-size: 1.8rem;
+  opacity: 0.12;
+}
