@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Tag from '../components/ui/Tag'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { insumos as insumosData, fornecedorOptions } from '../data/mockData'
+import { insumos as insumosData, fornecedorOptions, categoriaOptions } from '../data/mockData'
 
 function ModalNovoInsumo({ onClose }) {
   const { showToast } = useApp()
@@ -17,7 +17,7 @@ function ModalNovoInsumo({ onClose }) {
         <div className="form-group">
           <label>Categoria</label>
           <select>
-            {['Farináceos','Laticínios','Carnes','Temperos','Embalagens','Outros'].map(c => (
+            {categoriaOptions.map(c => (
               <option key={c}>{c}</option>
             ))}
           </select>
@@ -118,9 +118,7 @@ export default function Insumos() {
         />
         <select>
           <option>Todas as categorias</option>
-          {['Farináceos','Laticínios','Carnes','Temperos','Embalagens'].map(c => (
-            <option key={c}>{c}</option>
-          ))}
+          {categoriaOptions.map(c => <option key={c}>{c}</option>)}
         </select>
         <button className="btn btn-primary" onClick={() => setModalNovo(true)}>
           + Novo Insumo
