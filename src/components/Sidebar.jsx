@@ -1,5 +1,4 @@
 import { useApp } from '../context/AppContext'
-import { useTheme } from '../context/ThemeContext'
 
 const navItems = [
   {
@@ -40,7 +39,6 @@ const navItems = [
 
 export default function Sidebar({ onLogout }) {
   const { currentPage, navigate } = useApp()
-  const { tema, toggleTema } = useTheme()
 
   return (
     <aside style={styles.sidebar}>
@@ -75,23 +73,6 @@ export default function Sidebar({ onLogout }) {
 
       {/* Rodapé da sidebar */}
       <div style={styles.bottomArea}>
-        {/* Toggle de tema */}
-        <button onClick={toggleTema} style={styles.temaToggle}>
-          <span style={styles.temaIcones}>
-            <span style={{ opacity: tema === 'claro' ? 1 : 0.4 }}>☀️</span>
-            <span style={styles.temaTrack}>
-              <span style={{
-                ...styles.temaKnob,
-                transform: tema === 'escuro' ? 'translateX(18px)' : 'translateX(1px)',
-              }} />
-            </span>
-            <span style={{ opacity: tema === 'escuro' ? 1 : 0.4 }}>🌙</span>
-          </span>
-          <span style={styles.temaLabel}>{tema === 'claro' ? 'Modo Claro' : 'Modo Escuro'}</span>
-        </button>
-
-        <div style={styles.divisorSidebar} />
-
         {/* Info do usuário + logout */}
         <div style={styles.userRow}>
           <div style={styles.userAvatar}>D</div>
@@ -190,47 +171,6 @@ const styles = {
   bottomArea: {
     borderTop: '1px solid rgba(255,255,255,0.07)',
     flexShrink: 0,
-  },
-  temaToggle: {
-    width: '100%',
-    background: 'rgba(255,255,255,0.04)',
-    border: 'none',
-    padding: '12px 20px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    transition: 'background 0.18s',
-  },
-  temaIcones: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 5,
-    fontSize: '0.9rem',
-  },
-  temaTrack: {
-    width: 28,
-    height: 16,
-    borderRadius: 8,
-    background: 'rgba(196,98,45,0.5)',
-    position: 'relative',
-    display: 'inline-block',
-    flexShrink: 0,
-  },
-  temaKnob: {
-    position: 'absolute',
-    top: 1,
-    width: 14,
-    height: 14,
-    borderRadius: '50%',
-    background: '#F7EDD8',
-    transition: 'transform 0.22s cubic-bezier(.4,0,.2,1)',
-    display: 'block',
-  },
-  temaLabel: {
-    fontSize: '0.78rem',
-    color: 'rgba(247,237,216,0.6)',
-    fontFamily: "'DM Sans', sans-serif",
   },
   divisorSidebar: {
     height: 1,
