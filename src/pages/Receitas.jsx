@@ -33,7 +33,7 @@ export default function Receitas() {
             <tr>
               <th>Produto</th>
               <th>Insumo</th>
-              <th>Quantidade / Unidade</th>
+              <th>Quantidade</th>
               <th>Unidade</th>
             </tr>
           </thead>
