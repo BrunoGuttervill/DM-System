@@ -1,4 +1,3 @@
-
 export const insumos = [
   { id: 1,  nome: 'Farinha',          categoria: 'Farináceos',  qtdAtual: 20,  qtdMin: 10,  unidade: 'kg',      validade: '30/09/2026', status: 'ok'      },
   { id: 2,  nome: 'Farinha (pizza)',  categoria: 'Farináceos',  qtdAtual: 15,  qtdMin: 10,  unidade: 'kg',      validade: '30/09/2026', status: 'ok'      },
@@ -39,7 +38,7 @@ export const insumos = [
   { id: 37, nome: 'Tomate',           categoria: 'Vegetais',    qtdAtual: 4,   qtdMin: 3,   unidade: 'kg',      validade: '17/05/2026', status: 'ok'      },
   { id: 38, nome: 'Tomate seco',      categoria: 'Vegetais',    qtdAtual: 1,   qtdMin: 1,   unidade: 'kg',      validade: '10/08/2026', status: 'ok'      },
   { id: 39, nome: 'Tempero verde',    categoria: 'Temperos',    qtdAtual: 1,   qtdMin: 1,   unidade: 'kg',      validade: '19/05/2026', status: 'ok'      },
-  { id: 40, nome: 'Oregano',          categoria: 'Temperos',    qtdAtual: 1,   qtdMin: 0.5, unidade: 'kg',      validade: '01/12/2026', status: 'ok'      },
+  { id: 40, nome: 'Oregano',          categoria: 'Condimentos', qtdAtual: 1,   qtdMin: 0.5, unidade: 'kg',      validade: '01/12/2026', status: 'ok'      },
   { id: 41, nome: 'Açucar',           categoria: 'Condimentos', qtdAtual: 5,   qtdMin: 2,   unidade: 'kg',      validade: '01/01/2027', status: 'ok'      },
   { id: 42, nome: 'Amendoin',         categoria: 'Condimentos', qtdAtual: 1,   qtdMin: 1,   unidade: 'kg',      validade: '01/10/2026', status: 'ok'      },
   { id: 43, nome: 'Azeite',           categoria: 'Condimentos', qtdAtual: 2,   qtdMin: 1,   unidade: 'litros',  validade: '01/06/2027', status: 'ok'      },
@@ -174,20 +173,20 @@ export const produtos = [
 
 
 export const receitas = [
-  { id: 1,  produto: '🍕 Pizza Tradicional',         insumos: 5, icon: '🍕' },
-  { id: 2,  produto: '🍕 Pizza Nobre',               insumos: 6, icon: '🍕' },
-  { id: 3,  produto: '🍕 Mini Pizza',                insumos: 4, icon: '🍕' },
-  { id: 4,  produto: '🥙 Calzone',                   insumos: 4, icon: '🥙' },
-  { id: 5,  produto: '🍝 Lasanha 1Kg',               insumos: 6, icon: '🍝' },
-  { id: 6,  produto: '🍝 Lasanha 300g',              insumos: 6, icon: '🍝' },
-  { id: 7,  produto: '🍝 Espaguete / Talharim / Penne 500g', insumos: 3, icon: '🍝' },
-  { id: 8,  produto: '🫙 Nhoque 500g',               insumos: 4, icon: '🫙' },
-  { id: 9,  produto: '🍝 Ravioli de Carne 500g',     insumos: 4, icon: '🍝' },
-  { id: 10, produto: '🍝 Capeletti de Frango 500g',  insumos: 4, icon: '🍝' },
-  { id: 11, produto: '🥟 Perogue',                   insumos: 3, icon: '🥟' },
-  { id: 12, produto: '🥟 Pastel Assado',             insumos: 4, icon: '🥟' },
-  { id: 13, produto: '🥟 Enrolado de Calabresa',     insumos: 3, icon: '🥟' },
-  { id: 14, produto: '🫙 Molho',                     insumos: 5, icon: '🫙' },
+  { id: 1,  produto: '🍕 Pizza Tradicional',                  insumos: 5, icon: '🍕', custo: 9.80  },
+  { id: 2,  produto: '🍕 Pizza Nobre',                        insumos: 6, icon: '🍕', custo: 13.40 },
+  { id: 3,  produto: '🍕 Mini Pizza',                         insumos: 4, icon: '🍕', custo: 4.20  },
+  { id: 4,  produto: '🥙 Calzone',                            insumos: 4, icon: '🥙', custo: 8.60  },
+  { id: 5,  produto: '🍝 Lasanha 1Kg',                        insumos: 6, icon: '🍝', custo: 18.50 },
+  { id: 6,  produto: '🍝 Lasanha 300g',                       insumos: 6, icon: '🍝', custo: 6.30  },
+  { id: 7,  produto: '🍝 Espaguete / Talharim / Penne 500g',  insumos: 3, icon: '🍝', custo: 2.80  },
+  { id: 8,  produto: '🫙 Nhoque 500g',                        insumos: 4, icon: '🫙', custo: 3.50  },
+  { id: 9,  produto: '🍝 Ravioli de Carne 500g',              insumos: 4, icon: '🍝', custo: 14.20 },
+  { id: 10, produto: '🍝 Capeletti de Frango 500g',           insumos: 4, icon: '🍝', custo: 9.70  },
+  { id: 11, produto: '🥟 Perogue',                            insumos: 3, icon: '🥟', custo: 5.40  },
+  { id: 12, produto: '🥟 Pastel Assado',                      insumos: 4, icon: '🥟', custo: 7.90  },
+  { id: 13, produto: '🥟 Enrolado de Calabresa',              insumos: 3, icon: '🥟', custo: 6.10  },
+  { id: 14, produto: '🫙 Molho',                              insumos: 5, icon: '🫙', custo: 8.30  },
 ];
 
 export const fichaDetalhe = [
@@ -245,12 +244,12 @@ export const insumosNivel = [
 
 
 export const relatorios = [
-  { id: 1, icon: '📊', titulo: 'Movimentações do Período', desc: 'Entradas e saídas de estoque'       },
-  { id: 2, icon: '💰', titulo: 'Custo de Produção',         desc: 'Custo por produto fabricado'        },
-  { id: 3, icon: '🏭', titulo: 'Produção por Período',       desc: 'Volume produzido por data'          },
-  { id: 4, icon: '⚠️', titulo: 'Perdas e Desperdícios',     desc: 'Insumos vencidos ou descartados'    },
-  { id: 5, icon: '🚚', titulo: 'Compras por Fornecedor',     desc: 'Histórico de entradas por fornecedor'},
-  { id: 6, icon: '📦', titulo: 'Estoque Atual',              desc: 'Fotografia atual do estoque'        },
+  { id: 1, icon: '📊', titulo: 'Movimentações do Período', desc: 'Entradas e saídas de estoque'        },
+  { id: 2, icon: '💰', titulo: 'Custo de Produção',         desc: 'Custo por produto fabricado'         },
+  { id: 3, icon: '🏭', titulo: 'Produção por Período',      desc: 'Volume produzido por data'           },
+  { id: 4, icon: '⚠️', titulo: 'Perdas e Desperdícios',    desc: 'Insumos vencidos ou descartados'     },
+  { id: 5, icon: '🚚', titulo: 'Compras por Fornecedor',    desc: 'Histórico de entradas por fornecedor'},
+  { id: 6, icon: '📦', titulo: 'Estoque Atual',             desc: 'Fotografia atual do estoque'         },
 ];
 
 export const produtoOptions = [
