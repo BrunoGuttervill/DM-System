@@ -1,7 +1,82 @@
 import { useState } from 'react'
 
+const IconMail = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="4" width="20" height="16" rx="3"/>
+    <path d="M2 7l10 7 10-7"/>
+  </svg>
+)
+const IconLock = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="11" width="14" height="10" rx="2"/>
+    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+  </svg>
+)
+const IconEye = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+)
+const IconEyeOff = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+)
+const IconKey = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="7.5" cy="15.5" r="5.5"/>
+    <path d="M21 2l-9.6 9.6"/>
+    <path d="M15.5 7.5l3 3L22 7l-3-3"/>
+  </svg>
+)
+const IconCheck = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+const IconArrowLeft = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5M12 5l-7 7 7 7"/>
+  </svg>
+)
+const IconMail2 = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </svg>
+)
+const IconAlert = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="12"/>
+    <line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+)
+const IconSparkle = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2l2.4 7.6H22l-6.2 4.5 2.4 7.6L12 17.2l-6.2 4.5 2.4-7.6L2 9.6h7.6z"/>
+  </svg>
+)
+const IconWarehouse = () => (
+  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 20V8L12 2 2 8v12h20z"/>
+    <path d="M9 20v-8h6v8"/>
+    <path d="M2 8h20"/>
+  </svg>
+)
+
+const features = [
+  'Controle de insumos em tempo real',
+  'Fichas técnicas e receitas',
+  'Alertas automáticos de estoque',
+  'Relatórios de produção',
+]
+
 export default function Login({ onLogin }) {
-  const [modo, setModo] = useState('login') 
+  const [modo, setModo] = useState('login')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [verSenha, setVerSenha] = useState(false)
@@ -28,191 +103,239 @@ export default function Login({ onLogin }) {
     setErro('')
     if (!email) { setErro('Digite seu e-mail.'); return }
     setCarregando(true)
-    setTimeout(() => {
-      setCarregando(false)
-      setModo('confirmacao')
-    }, 1200)
+    setTimeout(() => { setCarregando(false); setModo('confirmacao') }, 1200)
   }
 
   return (
-    <div style={styles.shell}>
-      <div style={styles.esquerdo}>
-        <div style={styles.overlay} />
-        <div style={styles.esquerdoConteudo}>
-          <div style={styles.logo}>🍝</div>
-          <h1 style={styles.marca}>Dany Massas</h1>
-          <p style={styles.submarca}>Sistema de Gestão de Estoque</p>
-          <div style={styles.destaques}>
-            {['Controle de insumos em tempo real', 'Fichas técnicas e receitas', 'Alertas automáticos de estoque', 'Relatórios de produção'].map((t, i) => (
-              <div key={i} style={styles.destaque}>
-                <span style={styles.destaqueIcon}>✓</span>
-                <span style={styles.destaqueTxt}>{t}</span>
+    <div style={s.shell}>
+      {}
+      <div style={s.esquerdo}>
+        <div style={s.grain} />
+        <div style={s.glow1} />
+        <div style={s.glow2} />
+
+        <div style={s.esquerdoInner}>
+          {}
+          <div style={s.logoWrap}>
+            <div style={s.logoIcon}>
+              <IconWarehouse />
+            </div>
+            <div>
+              <h1 style={s.marca}>Dany Massas</h1>
+              <p style={s.submarca}>Sistema de Gestão de Estoque</p>
+            </div>
+          </div>
+
+          {}
+          <div style={s.divider} />
+
+          {}
+          <div style={s.featuresWrap}>
+            <p style={s.featuresTitle}>Recursos incluídos</p>
+            {features.map((f, i) => (
+              <div key={i} style={s.featureRow}>
+                <div style={s.featureDot}><IconCheck /></div>
+                <span style={s.featureTxt}>{f}</span>
               </div>
             ))}
           </div>
-          <p style={styles.rodapeEsq}>Canoinhas · SC · Brasil</p>
+
+          {}
+          <div style={s.rodapeEsq}>
+            <span style={s.badge}>
+              <IconSparkle />
+              v1.0.0
+            </span>
+            <span style={s.rodapeTxt}>Canoinhas · SC · Brasil</span>
+          </div>
         </div>
       </div>
 
-      <div style={styles.direito}>
-        <div style={styles.card}>
+      {}
+      <div style={s.direito}>
+        <div style={s.card}>
 
+          {}
           {modo === 'login' && (
-            <>
-              <div style={styles.cabecalho}>
-                <h2 style={styles.titulo}>Bem-vinda, Dany 👋</h2>
-                <p style={styles.subtitulo}>Entre com suas credenciais para acessar o sistema</p>
+            <div style={s.cardInner}>
+              <div style={s.cardHeader}>
+                <h2 style={s.titulo}>Bem-vinda de volta</h2>
+                <p style={s.subtitulo}>Acesse o sistema com suas credenciais</p>
               </div>
 
-              <form onSubmit={handleLogin} style={styles.form}>
-                <div style={styles.grupo}>
-                  <label style={styles.label}>E-mail</label>
-                  <div style={styles.inputWrap}>
-                    <span style={styles.inputIcon}>✉️</span>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      style={styles.input}
-                      autoComplete="username"
-                    />
+              <form onSubmit={handleLogin} style={s.form}>
+                <Field label="E-mail" icon={<IconMail />}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    style={s.input}
+                    autoComplete="username"
+                  />
+                </Field>
+
+                <Field label="Senha" icon={<IconLock />}>
+                  <input
+                    type={verSenha ? 'text' : 'password'}
+                    value={senha}
+                    onChange={e => setSenha(e.target.value)}
+                    placeholder="••••••••"
+                    style={{ ...s.input, paddingRight: 46 }}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVerSenha(v => !v)}
+                    style={s.eyeBtn}
+                    tabIndex={-1}
+                    aria-label="Mostrar/ocultar senha"
+                  >
+                    {verSenha ? <IconEyeOff /> : <IconEye />}
+                  </button>
+                </Field>
+
+                {erro && (
+                  <div style={s.erroBox}>
+                    <IconAlert />
+                    <span>{erro}</span>
                   </div>
-                </div>
+                )}
 
-                <div style={styles.grupo}>
-                  <label style={styles.label}>Senha</label>
-                  <div style={styles.inputWrap}>
-                    <span style={styles.inputIcon}>🔒</span>
-                    <input
-                      type={verSenha ? 'text' : 'password'}
-                      value={senha}
-                      onChange={e => setSenha(e.target.value)}
-                      placeholder="••••••••"
-                      style={{ ...styles.input, paddingRight: 44 }}
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setVerSenha(v => !v)}
-                      style={styles.olho}
-                      tabIndex={-1}
-                    >
-                      {verSenha ? '🙈' : '👁️'}
-                    </button>
-                  </div>
-                </div>
-
-                {erro && <div style={styles.erro}>⚠️ {erro}</div>}
-
-                <button type="submit" style={styles.btnPrimario} disabled={carregando}>
-                  {carregando ? <span style={styles.spinner} /> : null}
-                  {carregando ? 'Entrando...' : 'Entrar no sistema'}
+                <button type="submit" style={s.btnPrimario} disabled={carregando}>
+                  {carregando
+                    ? <><span style={s.spinner} /> Entrando...</>
+                    : 'Entrar no sistema'}
                 </button>
               </form>
 
               <button
-                style={styles.linkBtn}
+                style={s.linkBtn}
                 onClick={() => { setModo('recuperar'); setErro('') }}
               >
                 Esqueci minha senha
               </button>
 
-              <p style={styles.hint}>
-                <strong>Demo:</strong> dany@massas.com · 123456
-              </p>
-            </>
+              <div style={s.demoBox}>
+                <span style={s.demoLabel}>Acesso demo</span>
+                <span style={s.demoVal}>dany@massas.com · 123456</span>
+              </div>
+            </div>
           )}
 
+          {}
           {modo === 'recuperar' && (
-            <>
-              <button style={styles.voltar} onClick={() => { setModo('login'); setErro('') }}>
-                ← Voltar
+            <div style={s.cardInner}>
+              <button style={s.voltarBtn} onClick={() => { setModo('login'); setErro('') }}>
+                <IconArrowLeft />
+                Voltar ao login
               </button>
-              <div style={styles.cabecalho}>
-                <div style={styles.iconeRecuperar}>🔑</div>
-                <h2 style={styles.titulo}>Recuperar senha</h2>
-                <p style={styles.subtitulo}>
-                  Informe seu e-mail cadastrado e enviaremos um link para criar uma nova senha.
+
+              <div style={s.iconCircle}>
+                <IconKey />
+              </div>
+
+              <div style={s.cardHeader}>
+                <h2 style={s.titulo}>Recuperar senha</h2>
+                <p style={s.subtitulo}>
+                  Informe seu e-mail e enviaremos um link para criar uma nova senha.
                 </p>
               </div>
 
-              <form onSubmit={handleRecuperar} style={styles.form}>
-                <div style={styles.grupo}>
-                  <label style={styles.label}>E-mail cadastrado</label>
-                  <div style={styles.inputWrap}>
-                    <span style={styles.inputIcon}>✉️</span>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      style={styles.input}
-                    />
+              <form onSubmit={handleRecuperar} style={s.form}>
+                <Field label="E-mail cadastrado" icon={<IconMail />}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    style={s.input}
+                  />
+                </Field>
+
+                {erro && (
+                  <div style={s.erroBox}>
+                    <IconAlert />
+                    <span>{erro}</span>
                   </div>
-                </div>
+                )}
 
-                {erro && <div style={styles.erro}>⚠️ {erro}</div>}
-
-                <button type="submit" style={styles.btnPrimario} disabled={carregando}>
-                  {carregando ? <span style={styles.spinner} /> : null}
-                  {carregando ? 'Enviando...' : 'Enviar link de recuperação'}
+                <button type="submit" style={s.btnPrimario} disabled={carregando}>
+                  {carregando
+                    ? <><span style={s.spinner} /> Enviando...</>
+                    : 'Enviar link de recuperação'}
                 </button>
               </form>
-            </>
+            </div>
           )}
 
+          {}
           {modo === 'confirmacao' && (
-            <div style={styles.confirmacaoWrap}>
-              <div style={styles.confirmacaoIcone}>📬</div>
-              <h2 style={styles.titulo}>E-mail enviado!</h2>
-              <p style={styles.confirmacaoTxt}>
-                Enviamos um link de recuperação para <strong>{email}</strong>.
-                Verifique sua caixa de entrada (e o spam, caso não encontre).
+            <div style={{ ...s.cardInner, textAlign: 'center' }}>
+              <div style={s.successCircle}>
+                <IconMail2 />
+              </div>
+              <h2 style={{ ...s.titulo, marginBottom: 10 }}>E-mail enviado!</h2>
+              <p style={{ ...s.subtitulo, marginBottom: 16, lineHeight: 1.7 }}>
+                Enviamos um link para <strong style={{ color: 'var(--escuro, #1C100A)' }}>{email}</strong>.
+                Verifique sua caixa de entrada.
               </p>
-              <p style={styles.confirmacaoAviso}>
+              <div style={s.avisoBox}>
                 O link expira em <strong>30 minutos</strong>.
-              </p>
+              </div>
               <button
-                style={styles.btnPrimario}
+                style={{ ...s.btnPrimario, marginTop: 24 }}
                 onClick={() => { setModo('login'); setEmail(''); setErro('') }}
               >
-                Voltar para o login
+                Voltar ao login
               </button>
             </div>
           )}
 
         </div>
 
-        <p style={styles.rodapeDir}>v1.0.0 · MassaStock · © {new Date().getFullYear()}</p>
+        <p style={s.rodapeDir}>MassaStock © {new Date().getFullYear()} · v1.0.0</p>
       </div>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeSlide {
-          from { opacity: 0; transform: translateY(12px); }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </div>
   )
 }
 
-const INPUT_BASE = {
+function Field({ label, icon, children }) {
+  return (
+    <div style={s.grupo}>
+      <label style={s.label}>{label}</label>
+      <div style={s.fieldWrap}>
+        <span style={s.fieldIcon}>{icon}</span>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+const INPUT = {
   width: '100%',
-  padding: '11px 14px 11px 42px',
-  border: '1.5px solid #EFE0BF',
+  padding: '11px 14px 11px 44px',
+  border: '1.5px solid #E4D8C4',
   borderRadius: 10,
   fontFamily: "'DM Sans', sans-serif",
   fontSize: '0.9rem',
-  color: '#3A2218',
-  background: '#FEFBF5',
+  color: '#2A1810',
+  background: '#FEFBF7',
   outline: 'none',
-  transition: 'border-color 0.2s, box-shadow 0.2s',
   boxSizing: 'border-box',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
 }
 
-const styles = {
+const s = {
   shell: {
     display: 'flex',
     minHeight: '100vh',
@@ -220,79 +343,139 @@ const styles = {
   },
 
   esquerdo: {
-    width: '42%',
-    background: '#1C100A',
+    width: '40%',
+    background: '#140D08',
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  overlay: {
+  grain: {
     position: 'absolute',
     inset: 0,
-    background: `
-      radial-gradient(ellipse at 20% 20%, rgba(196,98,45,0.18) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 80%, rgba(107,26,42,0.25) 0%, transparent 55%)
-    `,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")`,
+    opacity: 0.4,
     pointerEvents: 'none',
   },
-  esquerdoConteudo: {
+  glow1: {
+    position: 'absolute',
+    top: '-20%', left: '-15%',
+    width: '70%', height: '70%',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(196,98,45,0.14) 0%, transparent 70%)',
+    pointerEvents: 'none',
+  },
+  glow2: {
+    position: 'absolute',
+    bottom: '-20%', right: '-15%',
+    width: '60%', height: '60%',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(107,26,42,0.2) 0%, transparent 70%)',
+    pointerEvents: 'none',
+  },
+  esquerdoInner: {
     position: 'relative',
     zIndex: 1,
-    padding: '48px 40px',
-    animation: 'fadeSlide 0.6s ease both',
+    padding: '48px 44px',
+    width: '100%',
+    animation: 'fadeUp 0.7s ease both',
   },
-  logo: {
-    fontSize: '3.5rem',
-    marginBottom: 12,
+  logoWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 36,
+  },
+  logoIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 14,
+    background: 'rgba(196,98,45,0.12)',
+    border: '1px solid rgba(196,98,45,0.2)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#D97B40',
+    flexShrink: 0,
   },
   marca: {
     fontFamily: "'Playfair Display', serif",
-    fontSize: '2.1rem',
+    fontSize: '1.55rem',
     color: '#F7EDD8',
     fontWeight: 700,
-    letterSpacing: '0.5px',
-    lineHeight: 1.1,
-    margin: '0 0 6px',
+    letterSpacing: '0.3px',
+    margin: '0 0 3px',
+    lineHeight: 1.2,
   },
   submarca: {
-    fontSize: '0.75rem',
-    fontWeight: 300,
-    color: '#D97B40',
-    letterSpacing: '3px',
+    fontSize: '0.72rem',
+    color: '#C4622D',
+    letterSpacing: '2.5px',
     textTransform: 'uppercase',
-    margin: '0 0 40px',
+    fontWeight: 500,
+    margin: 0,
   },
-  destaques: {
+  divider: {
+    height: 1,
+    background: 'linear-gradient(90deg, rgba(196,98,45,0.3) 0%, transparent 100%)',
+    marginBottom: 32,
+  },
+  featuresWrap: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 14,
+    gap: 16,
     marginBottom: 48,
   },
-  destaque: {
+  featuresTitle: {
+    fontSize: '0.68rem',
+    fontWeight: 600,
+    letterSpacing: '2px',
+    textTransform: 'uppercase',
+    color: 'rgba(247,237,216,0.3)',
+    margin: '0 0 4px',
+  },
+  featureRow: {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
   },
-  destaqueIcon: {
+  featureDot: {
     width: 22,
     height: 22,
-    background: 'rgba(196,98,45,0.2)',
-    borderRadius: '50%',
+    borderRadius: 6,
+    background: 'rgba(61,122,79,0.15)',
+    border: '1px solid rgba(61,122,79,0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '0.7rem',
-    color: '#D97B40',
+    color: '#5BAF70',
     flexShrink: 0,
   },
-  destaqueTxt: {
+  featureTxt: {
     fontSize: '0.87rem',
-    color: 'rgba(247,237,216,0.7)',
+    color: 'rgba(247,237,216,0.65)',
     fontWeight: 400,
   },
   rodapeEsq: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+  badge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    background: 'rgba(196,98,45,0.12)',
+    border: '1px solid rgba(196,98,45,0.2)',
+    color: '#C4622D',
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    padding: '4px 10px',
+    borderRadius: 20,
+    letterSpacing: '0.5px',
+  },
+  rodapeTxt: {
     fontSize: '0.72rem',
     color: 'rgba(255,255,255,0.18)',
     letterSpacing: '1.5px',
@@ -301,7 +484,7 @@ const styles = {
 
   direito: {
     flex: 1,
-    background: '#F7EDD8',
+    background: '#F5EAD5',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -310,35 +493,33 @@ const styles = {
     position: 'relative',
   },
   card: {
-    background: '#fff',
+    background: '#FFFFFF',
     borderRadius: 20,
-    padding: '40px 40px',
     width: '100%',
     maxWidth: 420,
-    boxShadow: '0 4px 40px rgba(58,34,24,0.08)',
-    border: '1px solid #EFE0BF',
-    animation: 'fadeSlide 0.5s ease both',
+    boxShadow: '0 2px 40px rgba(58,34,24,0.09), 0 0 0 1px rgba(58,34,24,0.06)',
+    overflow: 'hidden',
   },
-
-  cabecalho: {
+  cardInner: {
+    padding: '40px 40px',
+    animation: 'fadeUp 0.4s ease both',
+  },
+  cardHeader: {
     marginBottom: 28,
-  },
-  iconeRecuperar: {
-    fontSize: '2.2rem',
-    marginBottom: 10,
   },
   titulo: {
     fontFamily: "'Playfair Display', serif",
-    fontSize: '1.5rem',
+    fontSize: '1.55rem',
     color: '#1C100A',
     fontWeight: 700,
     margin: '0 0 8px',
+    lineHeight: 1.2,
   },
   subtitulo: {
     fontSize: '0.86rem',
-    color: '#7A6A5A',
+    color: '#8A7060',
     margin: 0,
-    lineHeight: 1.5,
+    lineHeight: 1.6,
   },
 
   form: {
@@ -349,53 +530,60 @@ const styles = {
   grupo: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 7,
   },
   label: {
-    fontSize: '0.74rem',
+    fontSize: '0.73rem',
     fontWeight: 600,
     letterSpacing: '0.8px',
     textTransform: 'uppercase',
-    color: '#7A6A5A',
+    color: '#8A7060',
   },
-  inputWrap: {
+  fieldWrap: {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
   },
-  inputIcon: {
+  fieldIcon: {
     position: 'absolute',
     left: 13,
-    fontSize: '0.9rem',
+    color: '#B09070',
+    display: 'flex',
+    alignItems: 'center',
     pointerEvents: 'none',
-    userSelect: 'none',
   },
-  input: INPUT_BASE,
-  olho: {
+  input: INPUT,
+  eyeBtn: {
     position: 'absolute',
     right: 12,
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    padding: 0,
-    fontSize: '0.9rem',
-    lineHeight: 1,
+    color: '#B09070',
+    padding: 4,
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: 4,
+    transition: 'color 0.15s',
   },
 
-  erro: {
-    background: '#fdecea',
-    color: '#B03030',
-    border: '1px solid #f5c0c0',
-    borderRadius: 8,
+  erroBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    background: '#FEF1F1',
+    color: '#A03030',
+    border: '1px solid #F5CCCC',
+    borderRadius: 9,
     padding: '9px 14px',
     fontSize: '0.83rem',
     fontWeight: 500,
   },
 
   btnPrimario: {
-    marginTop: 6,
+    marginTop: 4,
     padding: '13px 18px',
-    background: '#6B1A2A',
+    background: 'linear-gradient(135deg, #6B1A2A 0%, #8C2236 100%)',
     color: '#F7EDD8',
     border: 'none',
     borderRadius: 10,
@@ -406,9 +594,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    transition: 'background 0.18s, transform 0.1s',
+    gap: 9,
     width: '100%',
+    letterSpacing: '0.3px',
+    boxShadow: '0 4px 14px rgba(107,26,42,0.3)',
+    transition: 'opacity 0.15s, transform 0.1s',
   },
 
   spinner: {
@@ -434,57 +624,33 @@ const styles = {
     display: 'block',
     width: '100%',
     textAlign: 'center',
-    textDecoration: 'underline',
-    textDecorationStyle: 'dotted',
-    textUnderlineOffset: 3,
+    textDecoration: 'none',
+    letterSpacing: '0.1px',
   },
 
-  hint: {
-    marginTop: 16,
-    padding: '10px 14px',
-    background: '#FEF8F0',
-    border: '1px dashed #D97B40',
-    borderRadius: 8,
-    fontSize: '0.78rem',
-    color: '#7A6A5A',
+  demoBox: {
+    marginTop: 20,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    padding: '12px 16px',
+    background: '#FEFBF5',
+    border: '1px dashed #D4AA78',
+    borderRadius: 10,
     textAlign: 'center',
-    lineHeight: 1.5,
   },
-
-  voltar: {
-    background: 'none',
-    border: 'none',
-    color: '#7A6A5A',
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: '0.83rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    padding: '0 0 20px',
-    display: 'block',
+  demoLabel: {
+    fontSize: '0.68rem',
+    fontWeight: 700,
+    letterSpacing: '1.5px',
+    textTransform: 'uppercase',
+    color: '#B09070',
   },
-
-  confirmacaoWrap: {
-    textAlign: 'center',
-    animation: 'fadeSlide 0.4s ease both',
-  },
-  confirmacaoIcone: {
-    fontSize: '3rem',
-    marginBottom: 16,
-  },
-  confirmacaoTxt: {
-    fontSize: '0.88rem',
-    color: '#7A6A5A',
-    lineHeight: 1.6,
-    margin: '12px 0',
-  },
-  confirmacaoAviso: {
+  demoVal: {
     fontSize: '0.82rem',
-    color: '#C4622D',
-    background: '#FEF8F0',
-    border: '1px solid #EFE0BF',
-    borderRadius: 8,
-    padding: '8px 14px',
-    margin: '16px 0 24px',
+    color: '#5A3A25',
+    fontWeight: 500,
+    fontFamily: "'DM Mono', 'Courier New', monospace",
   },
 
   rodapeDir: {
@@ -493,5 +659,54 @@ const styles = {
     fontSize: '0.72rem',
     color: 'rgba(58,34,24,0.3)',
     letterSpacing: '1px',
+  },
+
+  voltarBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#8A7060',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '0.83rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    padding: '0 0 22px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 7,
+    transition: 'color 0.15s',
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    background: 'rgba(196,98,45,0.08)',
+    border: '1px solid rgba(196,98,45,0.15)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#C4622D',
+    marginBottom: 20,
+  },
+
+  successCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    background: 'rgba(61,122,79,0.08)',
+    border: '1px solid rgba(61,122,79,0.18)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#3D7A4F',
+    margin: '0 auto 22px',
+  },
+  avisoBox: {
+    fontSize: '0.82rem',
+    color: '#C4622D',
+    background: '#FEF6EE',
+    border: '1px solid #F0D4B8',
+    borderRadius: 9,
+    padding: '10px 16px',
+    marginTop: 4,
   },
 }
