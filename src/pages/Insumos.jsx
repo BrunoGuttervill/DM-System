@@ -98,26 +98,57 @@ function ModalNovoInsumo({ onClose, onRegistrado }) {
   )
 }
 
-function ModalMovimentacao({ insumo, onClose }) {
+function ModalMovimentacao({ insumo, onClose, onRegistrado }) {
   const { showToast } = useApp()
   const now = new Date()
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
   const iso = local.toISOString().slice(0, 16)
-  const salvar = () => { onClose(); showToast('✅ Movimentação registrada!') }
+
+  const [tipo, setTipo] = useState('entrada');
+  const [qtd, setQtd] = useState('');
+  const [motivo, setMotivo] = useState('');
+
+
+  const salvar = () => {
+    fetch('http://localhost:3000/api/movimentacao', {
+      method: 'POST',
+      headers: { 'Content-type': 'application/json' },
+      body: JSON.stringify({
+        insumosId: insumo.id,
+        tipo: tipo,
+        qtd: Number(qtd),
+        motivo: motivo
+      })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          showToast('❌ ' + data.error, 'error')
+          return
+        }
+        onRegistrado()
+        onClose()
+        showToast('✅ Movimentação registrada!')
+      })
+  }
   return (
-    <Modal title={`📦 Movimentar — ${insumo}`} onClose={onClose}>
+    <Modal title={`📦 Movimentar — ${insumo.nome}`} onClose={onClose}>
       <div className="form-group">
         <label>Tipo de Movimentação</label>
-        <select>
-          {['Entrada (compra / reposição)', 'Saída (uso na produção)', 'Descarte / perda', 'Ajuste de inventário'].map(t => (
-            <option key={t}>{t}</option>
-          ))}
+        <select
+          value={tipo}
+          onChange={e => setTipo(e.target.value)}
+        >
+          <option value="entrada">Entrada (compra / reposição)</option>
+          <option value="saida">Saída (uso na produção)</option>
+          <option value="descarte">Descarte / perda</option>
+          <option value="ajuste">Ajuste de inventário</option>
         </select>
       </div>
       <div className="form-row">
         <div className="form-group">
           <label>Quantidade</label>
-          <input type="number" step="0.01" placeholder="0" />
+          <input type="number" step="0.01" placeholder="0" value={qtd} onChange={e => setQtd(Number(e.target.value))} />
         </div>
         <div className="form-group">
           <label>Data</label>
@@ -126,7 +157,7 @@ function ModalMovimentacao({ insumo, onClose }) {
       </div>
       <div className="form-group">
         <label>Motivo / Observação</label>
-        <textarea rows="2" placeholder="Ex: Compra NF 1234, Uso na produção..." />
+        <textarea rows="2" placeholder="Ex: Compra NF 1234, Uso na produção..." value={motivo} onChange={e => setMotivo(e.target.value)} />
       </div>
       <div className="modal-actions">
         <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
@@ -220,7 +251,7 @@ export default function Insumos() {
                 <td>
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={() => setMovInsumo(ins.nome)}
+                    onClick={() => setMovInsumo(ins)}
                   >
                     Movimentar
                   </button>
@@ -239,7 +270,7 @@ export default function Insumos() {
       </div>
 
       {modalNovo && <ModalNovoInsumo onClose={() => setModalNovo(false)} onRegistrado={carregarInsumos} />}
-      {movInsumo && <ModalMovimentacao insumo={movInsumo} onClose={() => setMovInsumo(null)} />}
+      {movInsumo && <ModalMovimentacao insumo={movInsumo} onClose={() => setMovInsumo(null)} onRegistrado={carregarInsumos} />}
     </div>
   )
 }

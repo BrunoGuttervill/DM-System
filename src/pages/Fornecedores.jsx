@@ -73,10 +73,74 @@ function ModalFornecedor({ onClose, onRegistrado }) {
   )
 }
 
+
+function ModalEditarFornecedor({ fornecedor, onClose, onAtualizar }) {
+  const { showToast } = useApp()
+  const [nome, setNome] = useState(fornecedor.nome)
+  const [cnpj, setCnpj] = useState(fornecedor.cnpj)
+  const [telefone, setTelefone] = useState(fornecedor.telefone)
+  const [email, setEmail] = useState(fornecedor.email)
+  const [insumos, setInsumos] = useState(fornecedor.insumos)
+
+  const salvar = () => {
+    fetch(`http://localhost:3000/api/fornecedor/${fornecedor.id}`, {
+      method: 'PUT',
+      headers: { 'Content-type': 'application/json' },
+      body: JSON.stringify({
+        nome: nome,
+        cnpj: cnpj,
+        telefone: telefone,
+        email: email,
+        insumos: insumos
+      })
+    })
+      .then(r => r.json())
+      .then(data => {
+        onAtualizar()
+        onClose()
+        showToast('Fornecedor atualizado com sucesso!')
+      })
+  }
+
+  return (
+    <Modal title="✏️ Editar Fornecedor" onClose={onClose}>
+      <div className="form-group">
+        <label>Nome da Empresa</label>
+        <input type="text" value={nome} onChange={e => setNome(e.target.value)} />
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label>CNPJ</label>
+          <input type="text" value={cnpj} onChange={e => setCnpj(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Telefone</label>
+          <input type="text" value={telefone} onChange={e => setTelefone(e.target.value)} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>E-mail</label>
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label>Insumos Fornecidos</label>
+        <textarea rows="2" value={insumos} onChange={e => setInsumos(e.target.value)} />
+      </div>
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" onClick={salvar}>Salvar</button>
+      </div>
+    </Modal>
+  )
+}
+
+
+
 export default function Fornecedores() {
   const { showToast } = useApp()
   const [modalAberto, setModalAberto] = useState(false)
   const [fornecedorData, setFornecedorData] = useState([])
+  const [fornecedorEditando, setFornecedorEditando] = useState(null)
 
   const carregarForncedor = () => {
     fetch('http://localhost:3000/api/fornecedor')
@@ -134,7 +198,7 @@ export default function Fornecedores() {
                 <td>
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={() => showToast('📝 Abrindo edição...')}
+                    onClick={() => setFornecedorEditando(f)}
                   >
                     Editar
                   </button>
@@ -153,6 +217,7 @@ export default function Fornecedores() {
       </div>
 
       {modalAberto && <ModalFornecedor onClose={() => setModalAberto(false)} onRegistrado={carregarForncedor} />}
+      {fornecedorEditando && <ModalEditarFornecedor fornecedor={fornecedorEditando} onClose={() => setFornecedorEditando(null)} onAtualizar={carregarForncedor} />}
     </div>
   )
 }
