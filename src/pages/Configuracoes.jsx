@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useApp } from '../context/AppContext'
+import {
+  IconPalette, IconWheat, IconClock, IconFactory,
+  IconKey, IconSmartphone, IconBox, IconTrash,
+  IconInfo, IconLogout, IconSun, IconMoon, IconEdit,
+} from '../components/Icons'
 
 function Secao({ titulo, children }) {
   return (
@@ -87,11 +92,11 @@ export default function Configuracoes({ onLogout }) {
       </div>
 
       {}
-      <Secao titulo="👤 Perfil">
+      <Secao titulo="Perfil">
         <div style={s.perfilWrap}>
           <div style={s.avatar}>
             <span style={s.avatarLetra}>D</span>
-            <button style={s.avatarEdit} title="Trocar foto">✏️</button>
+            <button style={s.avatarEdit} title="Trocar foto"><IconEdit width={12} height={12} /></button>
           </div>
           <div style={s.perfilInfo}>
             <div style={s.formRow}>
@@ -117,39 +122,39 @@ export default function Configuracoes({ onLogout }) {
       </Secao>
 
       {}
-      <Secao titulo="🎨 Aparência">
-        <Linha icone="🌗" label="Tema do sistema" descricao="Escolha entre o modo claro e escuro">
+      <Secao titulo="Aparência">
+        <Linha icone={<IconPalette width={18} height={18} />} label="Tema do sistema" descricao="Escolha entre o modo claro e escuro">
           <div style={s.temaBtns}>
-            <BotaoTema icone="☀️" label="Claro"  ativo={tema === 'claro'}  onClick={() => definirTema('claro')} />
-            <BotaoTema icone="🌙" label="Escuro" ativo={tema === 'escuro'} onClick={() => definirTema('escuro')} />
+            <BotaoTema icone={<IconSun width={15} height={15} />}  label="Claro"  ativo={tema === 'claro'}  onClick={() => definirTema('claro')} />
+            <BotaoTema icone={<IconMoon width={15} height={15} />} label="Escuro" ativo={tema === 'escuro'} onClick={() => definirTema('escuro')} />
           </div>
         </Linha>
       </Secao>
 
       {}
-      <Secao titulo="🔔 Notificações">
-        <Linha icone="🌾" label="Alertas de estoque baixo" descricao="Avisa quando um insumo atinge o nível mínimo">
+      <Secao titulo="Notificações">
+        <Linha icone={<IconWheat width={18} height={18} />} label="Alertas de estoque baixo" descricao="Avisa quando um insumo atinge o nível mínimo">
           <Toggle ativo={notifEstoque} onChange={() => setNotifEstoque(v => !v)} />
         </Linha>
         <div style={s.divisor} />
-        <Linha icone="⏰" label="Avisos de vencimento" descricao="Notifica sobre insumos próximos da validade">
+        <Linha icone={<IconClock width={18} height={18} />} label="Avisos de vencimento" descricao="Notifica sobre insumos próximos da validade">
           <Toggle ativo={notifVencimento} onChange={() => setNotifVencimento(v => !v)} />
         </Linha>
         <div style={s.divisor} />
-        <Linha icone="🏭" label="Confirmação de produção" descricao="Solicita confirmação ao registrar uma ordem">
+        <Linha icone={<IconFactory width={18} height={18} />} label="Confirmação de produção" descricao="Solicita confirmação ao registrar uma ordem">
           <Toggle ativo={notifProducao} onChange={() => setNotifProducao(v => !v)} />
         </Linha>
       </Secao>
 
       {}
-      <Secao titulo="🔒 Segurança">
-        <Linha icone="🔑" label="Alterar senha" descricao="Redefina sua senha de acesso">
+      <Secao titulo="Segurança">
+        <Linha icone={<IconKey width={18} height={18} />} label="Alterar senha" descricao="Redefina sua senha de acesso">
           <button className="btn btn-secondary btn-sm" onClick={() => showToast('📧 Link enviado para seu e-mail!')}>
             Redefinir
           </button>
         </Linha>
         <div style={s.divisor} />
-        <Linha icone="📱" label="Autenticação em dois fatores" descricao="Adicione uma camada extra de segurança">
+        <Linha icone={<IconSmartphone width={18} height={18} />} label="Autenticação em dois fatores" descricao="Adicione uma camada extra de segurança">
           <button className="btn btn-secondary btn-sm" onClick={() => showToast('🚧 Em breve!')}>
             Configurar
           </button>
@@ -157,27 +162,27 @@ export default function Configuracoes({ onLogout }) {
       </Secao>
 
       {}
-      <Secao titulo="⚙️ Sistema">
-        <Linha icone="📦" label="Exportar dados" descricao="Baixe todo o estoque em CSV/Excel">
+      <Secao titulo="Sistema">
+        <Linha icone={<IconBox width={18} height={18} />} label="Exportar dados" descricao="Baixe todo o estoque em CSV/Excel">
           <button className="btn btn-secondary btn-sm" onClick={() => showToast('📥 Exportando...')}>
             Exportar
           </button>
         </Linha>
         <div style={s.divisor} />
-        <Linha icone="🗑️" label="Limpar cache do sistema" descricao="Remove dados temporários armazenados localmente">
+        <Linha icone={<IconTrash width={18} height={18} />} label="Limpar cache do sistema" descricao="Remove dados temporários armazenados localmente">
           <button className="btn btn-secondary btn-sm" onClick={() => showToast('🧹 Cache limpo!')}>
             Limpar
           </button>
         </Linha>
         <div style={s.divisor} />
-        <Linha icone="ℹ️" label="Versão do sistema" descricao="MassaStock v1.0.0 · Build 2026">
+        <Linha icone={<IconInfo width={18} height={18} />} label="Versão do sistema" descricao="MassaStock v1.0.0 · Build 2026">
           <span style={s.versao}>v1.0.0</span>
         </Linha>
       </Secao>
 
       {}
-      <Secao titulo="⚠️ Zona de Perigo">
-        <Linha icone="🚪" label="Sair da conta" descricao="Encerra a sessão atual" danger>
+      <Secao titulo="Zona de Perigo">
+        <Linha icone={<IconLogout width={18} height={18} />} label="Sair da conta" descricao="Encerra a sessão atual" danger>
           <button
             style={s.btnLogout}
             onClick={() => setModalLogout(true)}
@@ -191,7 +196,7 @@ export default function Configuracoes({ onLogout }) {
       {modalLogout && (
         <div style={s.modalOverlay} onClick={e => e.target === e.currentTarget && setModalLogout(false)}>
           <div style={s.modalBox}>
-            <div style={s.modalIcone}>🚪</div>
+            <div style={s.modalIcone}><IconLogout width={40} height={40} /></div>
             <h3 style={s.modalTitulo}>Sair da conta?</h3>
             <p style={s.modalTexto}>
               Você será desconectada do sistema. Todas as alterações não salvas serão perdidas.
@@ -270,10 +275,13 @@ const s = {
     minWidth: 0,
   },
   linhaIcone: {
-    fontSize: '1.15rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--terra)',
     flexShrink: 0,
   },
-  iconeRed: { filter: 'sepia(1) saturate(3) hue-rotate(-10deg)' },
+  iconeRed: { color: 'var(--vermelho)' },
   linhaLabel: {
     fontSize: '0.9rem',
     fontWeight: 600,
@@ -389,7 +397,7 @@ const s = {
     fontSize: '0.84rem',
     transition: 'all 0.2s',
   },
-  temaBtnIcone: { fontSize: '1rem' },
+  temaBtnIcone: { display: 'flex', alignItems: 'center' },
   temaBtnLabel: {},
   temaBtnAtivo: {
     fontSize: '0.7rem',
@@ -464,7 +472,9 @@ const s = {
     animation: 'modalIn 0.2s ease',
   },
   modalIcone: {
-    fontSize: '2.8rem',
+    display: 'flex',
+    justifyContent: 'center',
+    color: 'var(--vermelho)',
     marginBottom: 12,
   },
   modalTitulo: {

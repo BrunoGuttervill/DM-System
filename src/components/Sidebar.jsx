@@ -1,38 +1,42 @@
 import { useApp } from '../context/AppContext'
+import {
+  IconDashboard, IconBell, IconWheat, IconBox, IconClipboard,
+  IconFactory, IconTruck, IconTrendingUp, IconSettings, IconLogo, IconLogout,
+} from './Icons'
 
 const navItems = [
   {
     section: 'Principal',
     links: [
-      { id: 'dashboard',    icon: '📊', label: 'Dashboard'          },
-      { id: 'alertas',      icon: '🔔', label: 'Alertas', badge: 3  },
+      { id: 'dashboard',    icon: IconDashboard,   label: 'Dashboard'          },
+      { id: 'alertas',      icon: IconBell,        label: 'Alertas', badge: 3  },
     ],
   },
   {
     section: 'Estoque',
     links: [
-      { id: 'insumos',   icon: '🌾', label: 'Matérias-primas'   },
-      { id: 'produtos',  icon: '📦', label: 'Produtos Acabados'  },
+      { id: 'insumos',   icon: IconWheat, label: 'Matérias-primas'   },
+      { id: 'produtos',  icon: IconBox,   label: 'Produtos Acabados'  },
     ],
   },
   {
     section: 'Produção',
     links: [
-      { id: 'receitas',  icon: '📋', label: 'Fichas Técnicas'    },
-      { id: 'producao',  icon: '🏭', label: 'Ordens de Produção' },
+      { id: 'receitas',  icon: IconClipboard, label: 'Fichas Técnicas'    },
+      { id: 'producao',  icon: IconFactory,   label: 'Ordens de Produção' },
     ],
   },
   {
     section: 'Gestão',
     links: [
-      { id: 'fornecedores',  icon: '🚚', label: 'Fornecedores' },
-      { id: 'relatorios',    icon: '📈', label: 'Relatórios'   },
+      { id: 'fornecedores',  icon: IconTruck,       label: 'Fornecedores' },
+      { id: 'relatorios',    icon: IconTrendingUp,  label: 'Relatórios'   },
     ],
   },
   {
     section: 'Sistema',
     links: [
-      { id: 'configuracoes', icon: '⚙️', label: 'Configurações' },
+      { id: 'configuracoes', icon: IconSettings, label: 'Configurações' },
     ],
   },
 ]
@@ -43,7 +47,12 @@ export default function Sidebar({ onLogout }) {
   return (
     <aside style={styles.sidebar}>
       <div style={styles.brand}>
-        <h1 style={styles.brandTitle}>🍝 Dany Massas</h1>
+        <h1 style={styles.brandTitle}>
+          <span style={{ display: 'inline-flex', verticalAlign: '-6px', marginRight: 8 }}>
+            <IconLogo width={22} height={22} />
+          </span>
+          Dany Massas
+        </h1>
         <span style={styles.brandSub}>Controle de Estoque</span>
       </div>
 
@@ -60,7 +69,9 @@ export default function Sidebar({ onLogout }) {
                 }}
                 onClick={() => navigate(link.id)}
               >
-                <span style={styles.navIcon}>{link.icon}</span>
+                <span style={styles.navIcon}>
+                  <link.icon width={18} height={18} />
+                </span>
                 {link.label}
                 {link.badge && (
                   <span style={styles.badge}>{link.badge}</span>
@@ -81,7 +92,7 @@ export default function Sidebar({ onLogout }) {
             <span style={styles.userEmail}>dany@massas.com</span>
           </div>
           <button onClick={onLogout} style={styles.logoutBtn} title="Sair">
-            🚪
+            <IconLogout width={16} height={16} />
           </button>
         </div>
 
@@ -113,6 +124,8 @@ const styles = {
     color: '#F7EDD8',
     letterSpacing: '0.5px',
     lineHeight: 1.2,
+    display: 'flex',
+    alignItems: 'center',
   },
   brandSub: {
     fontFamily: "'DM Sans', sans-serif",
@@ -153,9 +166,10 @@ const styles = {
     borderLeft: '3px solid #C4622D',
   },
   navIcon: {
-    fontSize: '1rem',
+    display: 'flex',
+    alignItems: 'center',
     width: 20,
-    textAlign: 'center',
+    justifyContent: 'center',
   },
   badge: {
     background: '#B03030',
@@ -222,13 +236,15 @@ const styles = {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '1rem',
-    opacity: 0.5,
+    color: 'rgba(247,237,216,0.55)',
+    opacity: 0.7,
     padding: 4,
     borderRadius: 6,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     transition: 'opacity 0.2s',
     flexShrink: 0,
-    title: 'Sair',
   },
   versao: {
     padding: '8px 20px 14px',

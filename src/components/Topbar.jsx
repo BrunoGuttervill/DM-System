@@ -1,4 +1,5 @@
 import { useApp } from '../context/AppContext'
+import { IconAlertTriangle } from './Icons'
 
 const pageTitles = {
   dashboard:    'Dashboard',
@@ -19,7 +20,8 @@ export default function Topbar() {
       <h2 style={styles.title}>{pageTitles[currentPage]}</h2>
       <div style={styles.right}>
         <button style={styles.alertaBtn} onClick={() => navigate('alertas')}>
-          ⚠️ Alertas
+          <IconAlertTriangle width={14} height={14} />
+          Alertas
           <span style={styles.badge}>3</span>
         </button>
         <div style={styles.avatar}>AD</div>

@@ -226,11 +226,11 @@ export const fornecedores = [
 
 
 export const alertas = [
-  { id: 1, tipo: 'critico', icon: '🔴', titulo: 'Gorgonzola — estoque crítico',      desc: 'Apenas 1 kg restante. Mínimo: 2 kg. Faça pedido urgente ao fornecedor.'  },
-  { id: 2, tipo: 'critico', icon: '🔴', titulo: 'Enrolado de Calabresa — baixíssimo',desc: 'Apenas 3 unidades restantes. Programar nova produção.'                   },
-  { id: 3, tipo: 'atencao', icon: '🟡', titulo: 'Fermento — estoque no limite',      desc: '2 kg restantes. Mínimo: 2 kg. Repor antes da próxima produção.'         },
-  { id: 4, tipo: 'atencao', icon: '🟡', titulo: 'Catupiry — estoque baixo',          desc: '3 kg restantes. Mínimo: 3 kg. Considere fazer pedido em breve.'         },
-  { id: 5, tipo: 'atencao', icon: '⏰', titulo: 'Bacon — vencimento em 2 dias',      desc: '2 kg com validade em 16/05/2026. Utilize com prioridade (FEFO).'        },
+  { id: 1, tipo: 'critico', icon: 'critico',    titulo: 'Gorgonzola — estoque crítico',      desc: 'Apenas 1 kg restante. Mínimo: 2 kg. Faça pedido urgente ao fornecedor.'  },
+  { id: 2, tipo: 'critico', icon: 'critico',    titulo: 'Enrolado de Calabresa — baixíssimo',desc: 'Apenas 3 unidades restantes. Programar nova produção.'                   },
+  { id: 3, tipo: 'atencao', icon: 'atencao',    titulo: 'Fermento — estoque no limite',      desc: '2 kg restantes. Mínimo: 2 kg. Repor antes da próxima produção.'         },
+  { id: 4, tipo: 'atencao', icon: 'atencao',    titulo: 'Catupiry — estoque baixo',          desc: '3 kg restantes. Mínimo: 3 kg. Considere fazer pedido em breve.'         },
+  { id: 5, tipo: 'atencao', icon: 'vencimento', titulo: 'Bacon — vencimento em 2 dias',      desc: '2 kg com validade em 16/05/2026. Utilize com prioridade (FEFO).'        },
 ];
 
 
@@ -244,12 +244,12 @@ export const insumosNivel = [
 
 
 export const relatorios = [
-  { id: 1, icon: '📊', titulo: 'Movimentações do Período', desc: 'Entradas e saídas de estoque'        },
-  { id: 2, icon: '💰', titulo: 'Custo de Produção',         desc: 'Custo por produto fabricado'         },
-  { id: 3, icon: '🏭', titulo: 'Produção por Período',      desc: 'Volume produzido por data'           },
-  { id: 4, icon: '⚠️', titulo: 'Perdas e Desperdícios',    desc: 'Insumos vencidos ou descartados'     },
-  { id: 5, icon: '🚚', titulo: 'Compras por Fornecedor',    desc: 'Histórico de entradas por fornecedor'},
-  { id: 6, icon: '📦', titulo: 'Estoque Atual',             desc: 'Fotografia atual do estoque'         },
+  { id: 1, icon: 'movimentacoes', titulo: 'Movimentações do Período', desc: 'Entradas e saídas de estoque'        },
+  { id: 2, icon: 'custo',         titulo: 'Custo de Produção',         desc: 'Custo por produto fabricado'         },
+  { id: 3, icon: 'producao',      titulo: 'Produção por Período',      desc: 'Volume produzido por data'           },
+  { id: 4, icon: 'perdas',        titulo: 'Perdas e Desperdícios',    desc: 'Insumos vencidos ou descartados'     },
+  { id: 5, icon: 'compras',       titulo: 'Compras por Fornecedor',    desc: 'Histórico de entradas por fornecedor'},
+  { id: 6, icon: 'estoque',       titulo: 'Estoque Atual',             desc: 'Fotografia atual do estoque'         },
 ];
 
 export const produtoOptions = [
