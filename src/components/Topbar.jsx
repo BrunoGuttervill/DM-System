@@ -1,19 +1,28 @@
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { IconAlertTriangle } from './Icons'
 
+
 const pageTitles = {
-  dashboard:    'Dashboard',
-  alertas:      'Alertas',
-  insumos:      'Matérias-primas',
-  produtos:     'Produtos Acabados',
-  receitas:     'Fichas Técnicas',
-  producao:     'Ordens de Produção',
+  dashboard: 'Dashboard',
+  alertas: 'Alertas',
+  insumos: 'Matérias-primas',
+  produtos: 'Produtos Acabados',
+  receitas: 'Fichas Técnicas',
+  producao: 'Ordens de Produção',
   fornecedores: 'Fornecedores',
-  relatorios:   'Relatórios',
+  relatorios: 'Relatórios',
 }
 
 export default function Topbar() {
   const { currentPage, navigate } = useApp()
+  const [totalAlertas, setTotalAlertas] = useState(0)
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/alertas')
+      .then(r => r.json())
+      .then(data => setTotalAlertas(data.length))
+  }, [currentPage])
 
   return (
     <header style={styles.topbar}>
@@ -22,7 +31,7 @@ export default function Topbar() {
         <button style={styles.alertaBtn} onClick={() => navigate('alertas')}>
           <IconAlertTriangle width={14} height={14} />
           Alertas
-          <span style={styles.badge}>3</span>
+          <span style={styles.badge}>{totalAlertas}</span>
         </button>
         <div style={styles.avatar}>AD</div>
       </div>

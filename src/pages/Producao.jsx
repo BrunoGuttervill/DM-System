@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { ordens, produtoOptions } from '../data/mockData'
+import { produtoOptions } from '../data/mockData'
 
 function ModalProducao({ onClose }) {
   const { showToast } = useApp()
@@ -46,6 +46,13 @@ function ModalProducao({ onClose }) {
 
 export default function Producao() {
   const [modalAberto, setModalAberto] = useState(false)
+  const [ordensData, setOrdensData] = useState([])
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/producao')
+      .then(r => r.json())
+      .then(data => setOrdensData(data))
+  }, [])
 
   return (
     <div className="page-fade">
@@ -68,7 +75,7 @@ export default function Producao() {
             </tr>
           </thead>
           <tbody>
-            {ordens.map(o => (
+            {ordensData.map(o => (
               <tr key={o.id}>
                 <td>{o.data}</td>
                 <td>{o.produto}</td>

@@ -1,48 +1,58 @@
+import { useState, useEffect } from "react"
 import { useApp } from '../context/AppContext'
 import {
   IconDashboard, IconBell, IconWheat, IconBox, IconClipboard,
   IconFactory, IconTruck, IconTrendingUp, IconSettings, IconLogo, IconLogout,
 } from './Icons'
 
-const navItems = [
-  {
-    section: 'Principal',
-    links: [
-      { id: 'dashboard',    icon: IconDashboard,   label: 'Dashboard'          },
-      { id: 'alertas',      icon: IconBell,        label: 'Alertas', badge: 3  },
-    ],
-  },
-  {
-    section: 'Estoque',
-    links: [
-      { id: 'insumos',   icon: IconWheat, label: 'Matérias-primas'   },
-      { id: 'produtos',  icon: IconBox,   label: 'Produtos Acabados'  },
-    ],
-  },
-  {
-    section: 'Produção',
-    links: [
-      { id: 'receitas',  icon: IconClipboard, label: 'Fichas Técnicas'    },
-      { id: 'producao',  icon: IconFactory,   label: 'Ordens de Produção' },
-    ],
-  },
-  {
-    section: 'Gestão',
-    links: [
-      { id: 'fornecedores',  icon: IconTruck,       label: 'Fornecedores' },
-      { id: 'relatorios',    icon: IconTrendingUp,  label: 'Relatórios'   },
-    ],
-  },
-  {
-    section: 'Sistema',
-    links: [
-      { id: 'configuracoes', icon: IconSettings, label: 'Configurações' },
-    ],
-  },
-]
 
 export default function Sidebar({ onLogout }) {
   const { currentPage, navigate } = useApp()
+  const [totalAlertas, setTotalAlertas] = useState(0)
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/alertas')
+      .then(r => r.json())
+      .then(data => setTotalAlertas(data.length))
+  }, [currentPage])
+
+
+  const navItems = [
+    {
+      section: 'Principal',
+      links: [
+        { id: 'dashboard', icon: IconDashboard, label: 'Dashboard' },
+        { id: 'alertas', icon: IconBell, label: 'Alertas', badge: totalAlertas },
+      ],
+    },
+    {
+      section: 'Estoque',
+      links: [
+        { id: 'insumos', icon: IconWheat, label: 'Matérias-primas' },
+        { id: 'produtos', icon: IconBox, label: 'Produtos Acabados' },
+      ],
+    },
+    {
+      section: 'Produção',
+      links: [
+        { id: 'receitas', icon: IconClipboard, label: 'Fichas Técnicas' },
+        { id: 'producao', icon: IconFactory, label: 'Ordens de Produção' },
+      ],
+    },
+    {
+      section: 'Gestão',
+      links: [
+        { id: 'fornecedores', icon: IconTruck, label: 'Fornecedores' },
+        { id: 'relatorios', icon: IconTrendingUp, label: 'Relatórios' },
+      ],
+    },
+    {
+      section: 'Sistema',
+      links: [
+        { id: 'configuracoes', icon: IconSettings, label: 'Configurações' },
+      ],
+    },
+  ]
 
   return (
     <aside style={styles.sidebar}>

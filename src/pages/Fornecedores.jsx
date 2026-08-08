@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { fornecedores as fornData } from '../data/mockData'
 
 function ModalFornecedor({ onClose }) {
   const { showToast } = useApp()
@@ -41,6 +40,13 @@ function ModalFornecedor({ onClose }) {
 export default function Fornecedores() {
   const { showToast } = useApp()
   const [modalAberto, setModalAberto] = useState(false)
+  const [fornData, setFornData] = useState([])
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/fornecedor')
+      .then(r => r.json())
+      .then(data => setFornData(data))
+  }, [])
 
   return (
     <div className="page-fade">
@@ -63,22 +69,30 @@ export default function Fornecedores() {
             </tr>
           </thead>
           <tbody>
-            {fornData.map(f => (
-              <tr key={f.id}>
-                <td><strong>{f.nome}</strong></td>
-                <td>{f.cnpj}</td>
-                <td>{f.telefone}</td>
-                <td>{f.insumos}</td>
-                <td>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => showToast('📝 Abrindo edição...')}
-                  >
-                    Editar
-                  </button>
+            {fornData.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
+                  Nenhum fornecedor cadastrado
                 </td>
               </tr>
-            ))}
+            ) : (
+              fornData.map(f => (
+                <tr key={f.id}>
+                  <td><strong>{f.nome}</strong></td>
+                  <td>{f.cnpj}</td>
+                  <td>{f.telefone}</td>
+                  <td>{f.insumos}</td>
+                  <td>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => showToast('📝 Abrindo edição...')}
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
