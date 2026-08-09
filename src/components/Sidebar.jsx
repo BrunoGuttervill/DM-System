@@ -7,7 +7,7 @@ import {
 
 
 export default function Sidebar({ onLogout }) {
-  const { currentPage, navigate } = useApp()
+  const { currentPage, navigate, fotoPerfil } = useApp()
   const [totalAlertas, setTotalAlertas] = useState(0)
 
   useEffect(() => {
@@ -96,7 +96,11 @@ export default function Sidebar({ onLogout }) {
       <div style={styles.bottomArea}>
         {/* Info do usuário + logout */}
         <div style={styles.userRow}>
-          <div style={styles.userAvatar}>D</div>
+          <div style={styles.userAvatar}>
+            {fotoPerfil
+              ? <img src={fotoPerfil} alt="Foto de perfil" style={styles.userAvatarFoto} />
+              : 'D'}
+          </div>
           <div style={styles.userInfo}>
             <span style={styles.userName}>Dany Massas</span>
             <span style={styles.userEmail}>dany@massas.com</span>
@@ -220,6 +224,13 @@ const styles = {
     fontSize: '0.9rem',
     fontFamily: "'Playfair Display', serif",
     flexShrink: 0,
+    overflow: 'hidden',
+  },
+  userAvatarFoto: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
   },
   userInfo: {
     flex: 1,

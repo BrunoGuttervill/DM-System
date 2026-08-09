@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useApp } from '../context/AppContext'
 import {
@@ -68,12 +68,34 @@ function BotaoTema({ icone, label, ativo, onClick }) {
 
 export default function Configuracoes({ onLogout }) {
   const { tema, definirTema } = useTheme()
-  const { showToast } = useApp()
+  const { showToast, fotoPerfil, setFotoPerfil } = useApp()
 
   const [notifEstoque, setNotifEstoque] = useState(true)
   const [notifVencimento, setNotifVencimento] = useState(true)
   const [notifProducao, setNotifProducao] = useState(false)
   const [modalLogout, setModalLogout] = useState(false)
+  const inputFotoRef = useRef(null)
+
+  const escolherFoto = () => inputFotoRef.current?.click()
+
+  const handleFotoSelecionada = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      showToast('❌ Selecione um arquivo de imagem válido.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('❌ A imagem deve ter até 5MB.')
+      return
+    }
+
+    const url = URL.createObjectURL(file)
+    setFotoPerfil(url)
+    showToast('✅ Foto de perfil atualizada!')
+    e.target.value = '' // permite selecionar o mesmo arquivo de novo depois
+  }
 
   const salvar = () => showToast('✅ Configurações salvas!')
 
@@ -86,17 +108,27 @@ export default function Configuracoes({ onLogout }) {
           <h2 style={s.headerTitulo}>Configurações</h2>
           <p style={s.headerSub}>Preferências do sistema e da conta</p>
         </div>
-        <button className="btn btn-primary" onClick={salvar}>
-          Salvar alterações
-        </button>
       </div>
 
       {}
       <Secao titulo="Perfil">
         <div style={s.perfilWrap}>
           <div style={s.avatar}>
-            <span style={s.avatarLetra}>D</span>
-            <button style={s.avatarEdit} title="Trocar foto"><IconEdit width={12} height={12} /></button>
+            {fotoPerfil ? (
+              <img src={fotoPerfil} alt="Foto de perfil" style={s.avatarFoto} />
+            ) : (
+              <span style={s.avatarLetra}>D</span>
+            )}
+            <button style={s.avatarEdit} title="Trocar foto" onClick={escolherFoto}>
+              <IconEdit width={12} height={12} />
+            </button>
+            <input
+              ref={inputFotoRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFotoSelecionada}
+              style={{ display: 'none' }}
+            />
           </div>
           <div style={s.perfilInfo}>
             <div style={s.formRow}>
@@ -191,6 +223,13 @@ export default function Configuracoes({ onLogout }) {
           </button>
         </Linha>
       </Secao>
+
+      {}
+      <div style={s.rodape}>
+        <button className="btn btn-primary" style={s.btnSalvarRodape} onClick={salvar}>
+          Salvar alterações
+        </button>
+      </div>
 
       {}
       {modalLogout && (
@@ -329,6 +368,13 @@ const s = {
     fontWeight: 700,
     userSelect: 'none',
   },
+  avatarFoto: {
+    width: 72,
+    height: 72,
+    borderRadius: '50%',
+    objectFit: 'cover',
+    display: 'block',
+  },
   avatarEdit: {
     position: 'absolute',
     bottom: 0,
@@ -449,6 +495,18 @@ const s = {
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.18s',
+  },
+
+  rodape: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    paddingTop: 12,
+    marginTop: 4,
+    marginBottom: 40,
+  },
+  btnSalvarRodape: {
+    padding: '11px 28px',
+    fontSize: '0.88rem',
   },
 
   modalOverlay: {

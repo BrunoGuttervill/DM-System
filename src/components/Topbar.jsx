@@ -15,7 +15,7 @@ const pageTitles = {
 }
 
 export default function Topbar() {
-  const { currentPage, navigate } = useApp()
+  const { currentPage, navigate, fotoPerfil } = useApp()
   const [totalAlertas, setTotalAlertas] = useState(0)
 
   useEffect(() => {
@@ -33,7 +33,11 @@ export default function Topbar() {
           Alertas
           <span style={styles.badge}>{totalAlertas}</span>
         </button>
-        <div style={styles.avatar}>AD</div>
+        <div style={styles.avatar}>
+          {fotoPerfil
+            ? <img src={fotoPerfil} alt="Foto de perfil" style={styles.avatarFoto} />
+            : 'AD'}
+        </div>
       </div>
     </header>
   )
@@ -93,5 +97,12 @@ const styles = {
     color: 'var(--creme)',
     fontWeight: 600,
     fontSize: '0.85rem',
+    overflow: 'hidden',
+  },
+  avatarFoto: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
   },
 }
