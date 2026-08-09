@@ -43,7 +43,7 @@ function ModalMovimentacao({ insumo, onClose }) {
   )
 }
 
-function ModalNovoInsumo({ onClose }) {
+function ModalNovoInsumo({ onClose, onCriado }) {
   const { showToast } = useApp()
   const [formData, setFormData] = useState({
     nome: '',
@@ -55,6 +55,7 @@ function ModalNovoInsumo({ onClose }) {
     fornecedor: ''
   })
   const [errors, setErrors] = useState({})
+  const [salvando, setSalvando] = useState(false)
 
   const validate = () => {
     const newErrors = {}
@@ -66,15 +67,40 @@ function ModalNovoInsumo({ onClose }) {
     return newErrors
   }
 
-  const handleSalvar = () => {
+  const handleSalvar = async () => {
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       showToast('⚠️ Preencha os campos obrigatórios corretamente')
       return
     }
-    onClose()
-    showToast(`✅ ${formData.nome} cadastrado com sucesso!`)
+
+    setSalvando(true)
+    try {
+      const res = await fetch('http://localhost:3000/api/insumos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.nome,
+          categoria: formData.categoria,
+          qtdAtual: parseFloat(formData.qtdAtual),
+          qtdMin: parseFloat(formData.qtdMin),
+          unidade: formData.unidade,
+          validade: formData.validade,
+          fornecedor: formData.fornecedor,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Falha ao salvar')
+
+      onClose()
+      showToast(`✅ ${formData.nome} cadastrado com sucesso!`)
+      await onCriado() // recarrega a lista da tela
+    } catch (err) {
+      showToast('❌ Não foi possível salvar o insumo. Tente novamente.')
+    } finally {
+      setSalvando(false)
+    }
   }
 
   const handleChange = (field, value) => {
@@ -133,8 +159,10 @@ function ModalNovoInsumo({ onClose }) {
         {errors.validade && <span className="form-error">{errors.validade}</span>}
       </div>
       <div className="modal-actions">
-        <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-        <button className="btn btn-primary" onClick={handleSalvar}>Salvar Insumo</button>
+        <button className="btn btn-secondary" onClick={onClose} disabled={salvando}>Cancelar</button>
+        <button className="btn btn-primary" onClick={handleSalvar} disabled={salvando}>
+          {salvando ? 'Salvando...' : 'Salvar Insumo'}
+        </button>
       </div>
     </Modal>
   )
@@ -146,11 +174,17 @@ export default function Insumos() {
   const [modalNovo, setModalNovo] = useState(false)
   const [movInsumo, setMovInsumo] = useState(null)
   const [insumosData, setInsumosData] = useState([])
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const ITENS_POR_PAGINA = 10
+
+  const carregarInsumos = async () => {
+    const res = await fetch('http://localhost:3000/api/insumos')
+    const data = await res.json()
+    setInsumosData(data)
+  }
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/insumos')
-      .then(r => r.json())
-      .then(data => setInsumosData(data))
+    carregarInsumos()
   }, [])
 
   const categoriasUnicas = useMemo(() => {
@@ -163,6 +197,19 @@ export default function Insumos() {
     const matchCategoria = filtroCategoria === 'todas' || i.categoria === filtroCategoria
     return matchBusca && matchCategoria
   })
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA))
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca, filtroCategoria])
+
+  useEffect(() => {
+    if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
+  }, [totalPaginas, paginaAtual])
+
+  const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
+  const paginados = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA)
 
   const formatarValidade = (v) => {
     if (!v) return ''
@@ -216,7 +263,7 @@ export default function Insumos() {
                 </td>
               </tr>
             ) : (
-              filtrados.map(ins => (
+              paginados.map(ins => (
                 <tr key={ins.id}>
                   <td><strong>{ins.nome}</strong></td>
                   <td>{ins.categoria}</td>
@@ -236,7 +283,40 @@ export default function Insumos() {
         </table>
       </div>
 
-      {modalNovo && <ModalNovoInsumo onClose={() => setModalNovo(false)} />}
+      {filtrados.length > 0 && (
+        <div className="pagination">
+          <span className="pagination-info">
+            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, filtrados.length)} de {filtrados.length}
+          </span>
+          <div className="pagination-btns">
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.max(1, p - 1))}
+              disabled={paginaAtual === 1}
+            >
+              Anterior
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+              <button
+                key={n}
+                className={`pagination-btn ${n === paginaAtual ? 'active' : ''}`}
+                onClick={() => setPaginaAtual(n)}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))}
+              disabled={paginaAtual === totalPaginas}
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
+
+      {modalNovo && <ModalNovoInsumo onClose={() => setModalNovo(false)} onCriado={carregarInsumos} />}
       {movInsumo && <ModalMovimentacao insumo={movInsumo} onClose={() => setMovInsumo(null)} />}
     </div>
   )
