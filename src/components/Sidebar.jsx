@@ -66,7 +66,7 @@ export default function Sidebar({ onLogout }) {
         <span style={styles.brandSub}>Controle de Estoque</span>
       </div>
 
-      <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto' }}>
+      <nav className="sidebar-nav" style={{ flex: 1, padding: '16px 0', overflowY: 'auto' }}>
         {navItems.map((group) => (
           <div key={group.section}>
             <div style={styles.navSection}>{group.section}</div>

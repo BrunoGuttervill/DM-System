@@ -765,6 +765,17 @@ td strong { font-weight: 600; color: var(--escuro); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--cinza-light); }
 
+/* Menu lateral: mantém o scroll funcionando, mas sem a barrinha visível */
+.sidebar-nav {
+  scrollbar-width: none;      
+  -ms-overflow-style: none;   
+}
+.sidebar-nav::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;              
+}
+
 .text-muted  { color: var(--cinza); }
 .text-strong { font-weight: 600; color: var(--escuro); }
 .text-sm     { font-size: 0.8rem; }
