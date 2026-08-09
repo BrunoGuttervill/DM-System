@@ -442,6 +442,51 @@ tbody td {
 }
 td strong { font-weight: 600; color: var(--escuro); }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+.pagination-info {
+  font-size: 0.78rem;
+  color: var(--cinza);
+}
+.pagination-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pagination-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--texto);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pagination-btn:hover:not(:disabled):not(.active) {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pagination-btn.active {
+  background: var(--vinho);
+  border-color: var(--vinho);
+  color: #fff;
+}
+
 .search-bar {
   display: flex;
   gap: 8px;
@@ -767,13 +812,13 @@ td strong { font-weight: 600; color: var(--escuro); }
 
 /* Menu lateral: mantém o scroll funcionando, mas sem a barrinha visível */
 .sidebar-nav {
-  scrollbar-width: none;      
-  -ms-overflow-style: none;   
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* IE/Edge antigo */
 }
 .sidebar-nav::-webkit-scrollbar {
   width: 0;
   height: 0;
-  display: none;              
+  display: none;              /* Chrome, Edge, Safari */
 }
 
 .text-muted  { color: var(--cinza); }
