@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
+import { IconCheck, IconAlertTriangle, IconAlertCircle } from '../components/Icons'
 
 const tipoProdutoOptions = ['Pizza', 'Lasanha', 'Massa', 'Salgado', 'Molho', 'Bolacha']
 
@@ -49,15 +50,15 @@ function ModalNovoProduto({ onClose }) {
   }
 
   return (
-    <Modal title=" Nova Pizza" onClose={onClose}>
+    <Modal title="Novo Produto" onClose={onClose}>
       <div className="form-group">
-        <label>Nome da Pizza *</label>
+        <label>Nome do Produto *</label>
         <input type="text" placeholder="Ex: Calabresa" value={formData.nome} onChange={e => handleChange('nome', e.target.value)} className={errors.nome ? 'input-error' : ''} />
         {errors.nome && <span className="form-error">{errors.nome}</span>}
       </div>
       <div className="form-row">
         <div className="form-group">
-          <label>tipo *</label>
+          <label>Tipo *</label>
           <select value={formData.tipo} onChange={e => handleChange('tipo', e.target.value)} className={errors.tipo ? 'input-error' : ''}>
             <option value="">Selecione...</option>
             {tipoProdutoOptions.map(t => <option key={t} value={t}>{t}</option>)}
@@ -89,7 +90,7 @@ function ModalNovoProduto({ onClose }) {
       </div>
       <div className="modal-actions">
         <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-        <button className="btn btn-primary" onClick={handleSalvar}>Cadastrar Pizza</button>
+        <button className="btn btn-primary" onClick={handleSalvar}>Cadastrar Produto</button>
       </div>
     </Modal>
   )
@@ -121,22 +122,22 @@ export default function Produtos() {
       <div className="sec-header">
         <h3 className="sec-title">Produtos Acabados</h3>
         <button className="btn btn-primary" onClick={() => setModalNovo(true)}>
-          + Nova Pizza
+          + Novo Produto
         </button>
       </div>
 
-      <div className="stat-cards" style={{ marginBottom: '1rem' }}>
+      <div className="stat-cards">
         <button className={`stat-filter ${filtroStatus === 'todos' ? 'active' : ''}`} onClick={() => setFiltroStatus('todos')}>
           <span>Todos</span><strong>{stats.total}</strong>
         </button>
-        <button className={`stat-filter ${filtroStatus === 'ok' ? 'active' : ''}`} onClick={() => setFiltroStatus('ok')}>
-          <span>✓ Ok</span><strong>{stats.ok}</strong>
+        <button className={`stat-filter stat-filter-ok ${filtroStatus === 'ok' ? 'active' : ''}`} onClick={() => setFiltroStatus('ok')}>
+          <span><IconCheck width={12} height={12} /> Ok</span><strong>{stats.ok}</strong>
         </button>
-        <button className={`stat-filter ${filtroStatus === 'baixo' ? 'active' : ''}`} onClick={() => setFiltroStatus('baixo')}>
-          <span>⚠ Baixo</span><strong>{stats.baixo}</strong>
+        <button className={`stat-filter stat-filter-baixo ${filtroStatus === 'baixo' ? 'active' : ''}`} onClick={() => setFiltroStatus('baixo')}>
+          <span><IconAlertTriangle width={13} height={13} /> Baixo</span><strong>{stats.baixo}</strong>
         </button>
-        <button className={`stat-filter ${filtroStatus === 'critico' ? 'active' : ''}`} onClick={() => setFiltroStatus('critico')}>
-          <span>🔴 Crítico</span><strong>{stats.critico}</strong>
+        <button className={`stat-filter stat-filter-critico ${filtroStatus === 'critico' ? 'active' : ''}`} onClick={() => setFiltroStatus('critico')}>
+          <span><IconAlertCircle width={13} height={13} /> Crítico</span><strong>{stats.critico}</strong>
         </button>
       </div>
 

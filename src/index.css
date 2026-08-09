@@ -270,6 +270,82 @@ body {
   gap: 16px;
   margin-bottom: 24px;
 }
+
+/* --- Filtros de status (Todos / Ok / Baixo / Crítico) --- */
+.stat-cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.stat-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.16s ease;
+}
+.stat-filter:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+  transform: translateY(-1px);
+}
+.stat-filter span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--cinza);
+}
+.stat-filter strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--escuro);
+  background: var(--bg-page);
+  border-radius: 20px;
+  padding: 1px 9px;
+}
+
+/* Estado ativo — neutro (Todos) */
+.stat-filter.active {
+  border-color: var(--terra);
+  background: var(--terra-light);
+}
+.stat-filter.active span,
+.stat-filter.active strong { color: var(--terra); }
+.stat-filter.active strong { background: rgba(196,98,45,0.14); }
+
+/* Estado ativo — por status, usando as cores que as tags já usam */
+.stat-filter-ok.active {
+  border-color: var(--verde);
+  background: var(--verde-light);
+}
+.stat-filter-ok.active span,
+.stat-filter-ok.active strong { color: var(--verde); }
+.stat-filter-ok.active strong { background: rgba(46,122,79,0.14); }
+
+.stat-filter-baixo.active {
+  border-color: var(--amarelo);
+  background: var(--amarelo-light);
+}
+.stat-filter-baixo.active span,
+.stat-filter-baixo.active strong { color: var(--amarelo); }
+.stat-filter-baixo.active strong { background: rgba(196,154,26,0.16); }
+
+.stat-filter-critico.active {
+  border-color: var(--vermelho);
+  background: var(--vermelho-light);
+}
+.stat-filter-critico.active span,
+.stat-filter-critico.active strong { color: var(--vermelho); }
+.stat-filter-critico.active strong { background: rgba(176,48,48,0.14); }
 .stat-card {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
