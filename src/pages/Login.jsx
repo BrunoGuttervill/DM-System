@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 
 const IconMail = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -67,6 +68,18 @@ const IconWarehouse = () => (
     <path d="M2 8h20"/>
   </svg>
 )
+const IconUser = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>
+  </svg>
+)
+const IconX = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+)
 
 const features = [
   'Controle de insumos em tempo real',
@@ -82,6 +95,7 @@ export default function Login({ onLogin }) {
   const [verSenha, setVerSenha] = useState(false)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
+  const [modalCadastro, setModalCadastro] = useState(false)
 
   const handleLogin = (e) => {
     e.preventDefault()
@@ -104,6 +118,12 @@ export default function Login({ onLogin }) {
     if (!email) { setErro('Digite seu e-mail.'); return }
     setCarregando(true)
     setTimeout(() => { setCarregando(false); setModo('confirmacao') }, 1200)
+  }
+
+  const handleContaCriada = (emailCriado) => {
+    setEmail(emailCriado)
+    setSenha('')
+    setModalCadastro(false)
   }
 
   return (
@@ -216,10 +236,12 @@ export default function Login({ onLogin }) {
                 Esqueci minha senha
               </button>
 
-              <div style={s.demoBox}>
-                <span style={s.demoLabel}>Acesso demo</span>
-                <span style={s.demoVal}>dany@massas.com · 123456</span>
-              </div>
+              <p style={s.criarContaTxt}>
+                Não tem conta?{' '}
+                <button type="button" style={s.criarContaLink} onClick={() => setModalCadastro(true)}>
+                  Criar conta
+                </button>
+              </p>
             </div>
           )}
 
@@ -297,6 +319,13 @@ export default function Login({ onLogin }) {
         <p style={s.rodapeDir}>MassaStock © {new Date().getFullYear()} · v1.0.0</p>
       </div>
 
+      {modalCadastro && (
+        <ModalCadastro
+          onClose={() => setModalCadastro(false)}
+          onCriado={handleContaCriada}
+        />
+      )}
+
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp {
@@ -304,6 +333,11 @@ export default function Login({ onLogin }) {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalCadastroIn {
+          from { opacity: 0; transform: scale(0.96) translateY(10px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </div>
   )
@@ -318,6 +352,157 @@ function Field({ label, icon, children }) {
         {children}
       </div>
     </div>
+  )
+}
+
+function ModalCadastro({ onClose, onCriado }) {
+  const [nome, setNome] = useState('')
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [verSenha, setVerSenha] = useState(false)
+  const [verConfirmar, setVerConfirmar] = useState(false)
+  const [erro, setErro] = useState('')
+  const [carregando, setCarregando] = useState(false)
+  const [sucesso, setSucesso] = useState(false)
+
+  const validarEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    setErro('')
+
+    if (!nome.trim()) { setErro('Digite seu nome completo.'); return }
+    if (!validarEmail(email)) { setErro('Digite um e-mail válido.'); return }
+    if (senha.length < 6) { setErro('A senha precisa ter pelo menos 6 caracteres.'); return }
+    if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
+
+    setCarregando(true)
+    // Sem rota de cadastro no backend ainda — simula o fluxo por enquanto.
+    setTimeout(() => {
+      setCarregando(false)
+      setSucesso(true)
+    }, 1100)
+  }
+
+  return createPortal(
+    <div style={s.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={s.modalBox}>
+        <button style={s.modalCloseBtn} onClick={onClose} aria-label="Fechar">
+          <IconX />
+        </button>
+
+        {!sucesso ? (
+          <div style={s.modalInner}>
+            <div style={s.cardHeader}>
+              <h2 style={s.titulo}>Criar sua conta</h2>
+              <p style={s.subtitulo}>Preencha os dados abaixo para começar a usar o sistema</p>
+            </div>
+
+            <form onSubmit={handleSubmit} style={s.form}>
+              <Field label="Nome completo" icon={<IconUser />}>
+                <input
+                  type="text"
+                  value={nome}
+                  onChange={e => setNome(e.target.value)}
+                  placeholder="Seu nome"
+                  style={s.input}
+                  autoComplete="name"
+                />
+              </Field>
+
+              <Field label="E-mail" icon={<IconMail />}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  style={s.input}
+                  autoComplete="email"
+                />
+              </Field>
+
+              <div style={s.formRowModal}>
+                <Field label="Senha" icon={<IconLock />}>
+                  <input
+                    type={verSenha ? 'text' : 'password'}
+                    value={senha}
+                    onChange={e => setSenha(e.target.value)}
+                    placeholder="Mín. 6 caracteres"
+                    style={{ ...s.input, paddingRight: 42 }}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVerSenha(v => !v)}
+                    style={s.eyeBtn}
+                    tabIndex={-1}
+                    aria-label="Mostrar/ocultar senha"
+                  >
+                    {verSenha ? <IconEyeOff /> : <IconEye />}
+                  </button>
+                </Field>
+
+                <Field label="Confirmar senha" icon={<IconLock />}>
+                  <input
+                    type={verConfirmar ? 'text' : 'password'}
+                    value={confirmarSenha}
+                    onChange={e => setConfirmarSenha(e.target.value)}
+                    placeholder="Repita a senha"
+                    style={{ ...s.input, paddingRight: 42 }}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVerConfirmar(v => !v)}
+                    style={s.eyeBtn}
+                    tabIndex={-1}
+                    aria-label="Mostrar/ocultar senha"
+                  >
+                    {verConfirmar ? <IconEyeOff /> : <IconEye />}
+                  </button>
+                </Field>
+              </div>
+
+              {erro && (
+                <div style={s.erroBox}>
+                  <IconAlert />
+                  <span>{erro}</span>
+                </div>
+              )}
+
+              <button type="submit" style={s.btnPrimario} disabled={carregando}>
+                {carregando
+                  ? <><span style={s.spinner} /> Criando conta...</>
+                  : 'Criar conta'}
+              </button>
+            </form>
+
+            <p style={s.criarContaTxt}>
+              Já tem conta?{' '}
+              <button type="button" style={s.criarContaLink} onClick={onClose}>
+                Fazer login
+              </button>
+            </p>
+          </div>
+        ) : (
+          <div style={{ ...s.modalInner, textAlign: 'center' }}>
+            <div style={s.successCircle}>
+              <IconCheck />
+            </div>
+            <h2 style={{ ...s.titulo, marginBottom: 10 }}>Conta criada!</h2>
+            <p style={{ ...s.subtitulo, marginBottom: 20, lineHeight: 1.7 }}>
+              Sua conta foi criada com <strong style={{ color: '#1C100A' }}>{email}</strong>.
+              Já pode entrar no sistema.
+            </p>
+            <button style={s.btnPrimario} onClick={() => onCriado(email)}>
+              Ir para o login
+            </button>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
   )
 }
 
@@ -527,6 +712,11 @@ const s = {
     flexDirection: 'column',
     gap: 18,
   },
+  formRowModal: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 14,
+  },
   grupo: {
     display: 'flex',
     flexDirection: 'column',
@@ -653,6 +843,25 @@ const s = {
     fontFamily: "'DM Mono', 'Courier New', monospace",
   },
 
+  criarContaTxt: {
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: '0.83rem',
+    color: '#8A7060',
+  },
+  criarContaLink: {
+    background: 'none',
+    border: 'none',
+    color: '#C4622D',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '0.83rem',
+    padding: 0,
+    textDecoration: 'underline',
+    textUnderlineOffset: '2px',
+  },
+
   rodapeDir: {
     position: 'absolute',
     bottom: 20,
@@ -708,5 +917,50 @@ const s = {
     borderRadius: 9,
     padding: '10px 16px',
     marginTop: 4,
+  },
+
+  // Modal de cadastro
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(20,13,8,0.55)',
+    backdropFilter: 'blur(3px)',
+    zIndex: 300,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    animation: 'overlayIn 0.18s ease',
+  },
+  modalBox: {
+    position: 'relative',
+    background: '#FFFFFF',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 480,
+    maxHeight: '92vh',
+    overflowY: 'auto',
+    boxShadow: '0 12px 48px rgba(20,13,8,0.35)',
+    animation: 'modalCadastroIn 0.22s cubic-bezier(.2,.8,.3,1)',
+  },
+  modalInner: {
+    padding: '40px 36px 36px',
+  },
+  modalCloseBtn: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: '50%',
+    background: 'rgba(28,16,10,0.05)',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#8A7060',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.15s, color 0.15s',
+    zIndex: 1,
   },
 }
