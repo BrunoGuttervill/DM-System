@@ -83,7 +83,7 @@ export default function Sidebar({ onLogout }) {
                   <link.icon width={18} height={18} />
                 </span>
                 {link.label}
-                {link.badge && (
+                {link.badge > 0 && (
                   <span style={styles.badge}>{link.badge}</span>
                 )}
               </a>
