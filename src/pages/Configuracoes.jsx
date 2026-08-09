@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useApp } from '../context/AppContext'
 import {
@@ -232,7 +233,7 @@ export default function Configuracoes({ onLogout }) {
       </div>
 
       {}
-      {modalLogout && (
+      {modalLogout && createPortal(
         <div style={s.modalOverlay} onClick={e => e.target === e.currentTarget && setModalLogout(false)}>
           <div style={s.modalBox}>
             <div style={s.modalIcone}><IconLogout width={40} height={40} /></div>
@@ -249,7 +250,8 @@ export default function Configuracoes({ onLogout }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
