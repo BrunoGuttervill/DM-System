@@ -45,8 +45,8 @@ export default function Topbar() {
 
 const styles = {
   topbar: {
-    background: 'var(--creme)',
-    borderBottom: '1px solid var(--creme2)',
+    background: 'var(--topbar-bg)',
+    borderBottom: '1px solid var(--topbar-border)',
     padding: '0 32px',
     height: 62,
     display: 'flex',
