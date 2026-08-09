@@ -201,3 +201,10 @@ export const IconCheck = (p) => (
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 )
+
+export const IconSearch = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="11" cy="11" r="7"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+)

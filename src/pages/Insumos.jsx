@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
 import { fornecedorOptions, categoriaOptions } from '../data/mockData'
+import { IconSearch } from '../components/Icons'
 
 function ModalMovimentacao({ insumo, onClose }) {
   const { showToast } = useApp()
@@ -10,7 +11,7 @@ function ModalMovimentacao({ insumo, onClose }) {
   const iso = local.toISOString().slice(0, 16)
 
   return (
-    <Modal title={`📦 Movimentar — ${insumo.nome}`} onClose={onClose}>
+    <Modal title={`Movimentar — ${insumo.nome}`} onClose={onClose}>
       <div className="form-group">
         <label>Tipo de Movimentação</label>
         <select>
@@ -82,7 +83,7 @@ function ModalNovoInsumo({ onClose }) {
   }
 
   return (
-    <Modal title="➕ Novo Insumo" onClose={onClose}>
+    <Modal title="Novo Insumo" onClose={onClose}>
       <div className="form-group">
         <label>Nome do Insumo *</label>
         <input type="text" placeholder="Ex: Farinha 00" value={formData.nome} onChange={e => handleChange('nome', e.target.value)} className={errors.nome ? 'input-error' : ''} />
@@ -114,17 +115,17 @@ function ModalNovoInsumo({ onClose }) {
         <div className="form-group">
           <label>Unidade</label>
           <select value={formData.unidade} onChange={e => handleChange('unidade', e.target.value)}>
-            <option value="kg">Kg</option>
-            <option value="l">Litros</option>
-            <option value="un">Unidades</option>
-            <option value="g">Gramas</option>
+            <option value="kg">kg</option>
+            <option value="litros">litros</option>
+            <option value="unidade">unidade</option>
+            <option value="rolo">rolo</option>
           </select>
         </div>
-        <div className="form-group">
-          <label>Estoque Mínimo *</label>
-          <input type="number" step="0.01" placeholder="0" value={formData.qtdMin} onChange={e => handleChange('qtdMin', e.target.value)} className={errors.qtdMin ? 'input-error' : ''} />
-          {errors.qtdMin && <span className="form-error">{errors.qtdMin}</span>}
-        </div>
+      </div>
+      <div className="form-group">
+        <label>Quantidade Mínima *</label>
+        <input type="number" step="0.01" placeholder="0" value={formData.qtdMin} onChange={e => handleChange('qtdMin', e.target.value)} className={errors.qtdMin ? 'input-error' : ''} />
+        {errors.qtdMin && <span className="form-error">{errors.qtdMin}</span>}
       </div>
       <div className="form-group">
         <label>Validade *</label>
@@ -174,7 +175,16 @@ export default function Insumos() {
       <div className="sec-header">
         <h3 className="sec-title">Matérias-primas</h3>
         <div className="sec-actions">
-          <input type="text" className="search-input" placeholder="🔍 Buscar insumo..." value={busca} onChange={e => setBusca(e.target.value)} />
+          <div className="search-wrap">
+            <IconSearch className="search-icon" width={15} height={15} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar insumo..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+            />
+          </div>
           <select className="filter-select" value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)}>
             <option value="todas">Todas as categorias</option>
             {categoriasUnicas.map(c => <option key={c} value={c}>{c}</option>)}
