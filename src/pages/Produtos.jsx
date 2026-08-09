@@ -101,6 +101,8 @@ export default function Produtos() {
   const [modalNovo, setModalNovo] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState('todos')
   const [produtosData, setProdutosData] = useState([])
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const ITENS_POR_PAGINA = 10
 
   useEffect(() => {
     fetch('http://localhost:3000/api/produtos')
@@ -109,6 +111,19 @@ export default function Produtos() {
   }, [])
 
   const filtrados = produtosData.filter(p => filtroStatus === 'todos' || p.status === filtroStatus)
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA))
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [filtroStatus])
+
+  useEffect(() => {
+    if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
+  }, [totalPaginas, paginaAtual])
+
+  const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
+  const paginados = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA)
 
   const stats = {
     total: produtosData.length,
@@ -162,7 +177,7 @@ export default function Produtos() {
                 </td>
               </tr>
             ) : (
-              filtrados.map(p => (
+              paginados.map(p => (
                 <tr key={p.id}>
                   <td><strong>{p.nome}</strong></td>
                   <td>{p.tipo}</td>
@@ -177,6 +192,39 @@ export default function Produtos() {
           </tbody>
         </table>
       </div>
+
+      {filtrados.length > 0 && (
+        <div className="pagination">
+          <span className="pagination-info">
+            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, filtrados.length)} de {filtrados.length}
+          </span>
+          <div className="pagination-btns">
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.max(1, p - 1))}
+              disabled={paginaAtual === 1}
+            >
+              Anterior
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+              <button
+                key={n}
+                className={`pagination-btn ${n === paginaAtual ? 'active' : ''}`}
+                onClick={() => setPaginaAtual(n)}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))}
+              disabled={paginaAtual === totalPaginas}
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
 
       {modalNovo && <ModalNovoProduto onClose={() => setModalNovo(false)} />}
     </div>
