@@ -3,38 +3,79 @@ import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
 import { produtoOptions } from '../data/mockData'
 
-function ModalProducao({ onClose }) {
+function ModalProducao({ onClose, onSucesso }) {
+
+  const [pizzas, setPizzas] = useState([])
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/produtos')
+      .then(r => r.json())
+      .then(data => setPizzas(data))
+  }, [])
+
+  const [pizzaId, setPizzaId] = useState('')
+  const [quantidade, setQuantidade] = useState('')
+  const [responsavel, setResponsavel] = useState('')
+  const [observacoes, setObservacoes] = useState('')
+
+
   const { showToast } = useApp()
   const now = new Date()
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
   const iso = local.toISOString().slice(0, 16)
-  const salvar = () => { onClose(); showToast('✅ Produção registrada! Insumos descontados automaticamente.') }
+  const salvar = () => {
+    fetch('http://localhost:3000/api/producao', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pizzaId, quantidade, responsavel, observacoes })
+    })
+      .then(async r => {
+        const data = await r.json()
+        if (r.ok) {
+          showToast('✅ Produção registrada! Insumos descontados automaticamente.')
+          onClose()
+          onSucesso()
+        } else {
+          showToast('Erro ao registrar produção' + data.error)
+        }
+      })
+  }
 
   return (
     <Modal title="🏭 Registrar Produção" onClose={onClose}>
       <div className="form-group">
         <label>Produto Fabricado</label>
-        <select>
-          {produtoOptions.map(p => <option key={p}>{p}</option>)}
+        <select value={pizzaId} onChange={e => setPizzaId(e.target.value)}>
+          <option value="">Selecione um produto...</option>
+          {pizzas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
         </select>
       </div>
       <div className="form-row">
         <div className="form-group">
           <label>Quantidade Produzida</label>
-          <input type="number" placeholder="0" min="1" />
+          <input type="number"
+            placeholder="0"
+            min="1"
+            value={quantidade}
+            onChange={e => setQuantidade(e.target.value)}
+          />
         </div>
         <div className="form-group">
           <label>Responsável</label>
-          <input type="text" placeholder="Nome do operador" />
+          <input type="text"
+            placeholder="Nome do operador"
+            value={responsavel}
+            onChange={e => setResponsavel(e.target.value)}
+          />
         </div>
       </div>
       <div className="form-group">
-        <label>Data e Hora</label>
-        <input type="datetime-local" defaultValue={iso} />
-      </div>
-      <div className="form-group">
         <label>Observações</label>
-        <textarea rows="2" placeholder="Alguma observação sobre esse lote..." />
+        <textarea rows="2"
+          placeholder="Alguma observação sobre esse lote..."
+          value={observacoes}
+          onChange={e => setObservacoes(e.target.value)}
+        />
       </div>
       <div className="modal-actions">
         <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
@@ -48,10 +89,13 @@ export default function Producao() {
   const [modalAberto, setModalAberto] = useState(false)
   const [ordensData, setOrdensData] = useState([])
 
-  useEffect(() => {
+  const carregarOrdens = () => {
     fetch('http://localhost:3000/api/producao')
       .then(r => r.json())
       .then(data => setOrdensData(data))
+  }
+  useEffect(() => {
+    carregarOrdens()
   }, [])
 
   return (
@@ -88,7 +132,7 @@ export default function Producao() {
         </table>
       </div>
 
-      {modalAberto && <ModalProducao onClose={() => setModalAberto(false)} />}
+      {modalAberto && <ModalProducao onClose={() => setModalAberto(false)} onSucesso={carregarOrdens} />}
     </div>
   )
 }
