@@ -391,7 +391,20 @@ body {
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   transition: background 0.3s, border-color 0.3s;
+  padding: 20px 22px;
 }
+.dash-panel h4 {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--escuro);
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-panel .alerta-item:last-child { margin-bottom: 0; }
+.dash-panel .mini-list li { padding: 10px 2px; }
+.dash-panel .prog-row { padding-top: 2px; }
 
 .table-wrap {
   background: var(--bg-card);
