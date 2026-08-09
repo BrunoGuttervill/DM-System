@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
+import { IconTrash } from '../components/Icons'
 
 function useFormFornecedor(inicial) {
   const [formData, setFormData] = useState(inicial)
@@ -200,10 +201,46 @@ function ModalEditarFornecedor({ fornecedor, onClose, onSalvo }) {
   )
 }
 
+function ModalConfirmarExclusao({ fornecedor, onClose, onExcluido }) {
+  const { showToast } = useApp()
+  const [excluindo, setExcluindo] = useState(false)
+
+  const confirmar = async () => {
+    setExcluindo(true)
+    try {
+      const res = await fetch(`http://localhost:3000/api/fornecedor/${fornecedor.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Falha ao excluir')
+      onClose()
+      showToast('🗑️ Fornecedor excluído.')
+      await onExcluido()
+    } catch (err) {
+      showToast('❌ Não foi possível excluir. Tente novamente.')
+      setExcluindo(false)
+    }
+  }
+
+  return (
+    <Modal title="Excluir fornecedor?" onClose={onClose}>
+      <p style={{ fontSize: '0.9rem', color: 'var(--texto)', lineHeight: 1.6, marginBottom: 8 }}>
+        Tem certeza que deseja excluir <strong>{fornecedor.nome}</strong>? Essa ação não pode ser desfeita.
+      </p>
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose} disabled={excluindo}>Cancelar</button>
+        <button className="btn btn-danger" onClick={confirmar} disabled={excluindo}>
+          {excluindo ? 'Excluindo...' : 'Sim, excluir'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 export default function Fornecedores() {
   const [modalAberto, setModalAberto] = useState(false)
   const [fornecedorEditando, setFornecedorEditando] = useState(null)
+  const [fornecedorExcluindo, setFornecedorExcluindo] = useState(null)
   const [fornData, setFornData] = useState([])
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const ITENS_POR_PAGINA = 10
 
   const carregarFornecedores = async () => {
     const res = await fetch('http://localhost:3000/api/fornecedor')
@@ -214,6 +251,15 @@ export default function Fornecedores() {
   useEffect(() => {
     carregarFornecedores()
   }, [])
+
+  const totalPaginas = Math.max(1, Math.ceil(fornData.length / ITENS_POR_PAGINA))
+
+  useEffect(() => {
+    if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
+  }, [totalPaginas, paginaAtual])
+
+  const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
+  const fornPaginados = fornData.slice(inicio, inicio + ITENS_POR_PAGINA)
 
   return (
     <div className="page-fade">
@@ -243,19 +289,29 @@ export default function Fornecedores() {
                 </td>
               </tr>
             ) : (
-              fornData.map(f => (
+              fornPaginados.map(f => (
                 <tr key={f.id}>
                   <td><strong>{f.nome}</strong></td>
                   <td>{f.cnpj}</td>
                   <td>{f.telefone}</td>
                   <td>{f.insumos}</td>
                   <td>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => setFornecedorEditando(f)}
-                    >
-                      Editar
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setFornecedorEditando(f)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ color: 'var(--vermelho)' }}
+                        onClick={() => setFornecedorExcluindo(f)}
+                        title="Excluir"
+                      >
+                        <IconTrash width={14} height={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -263,6 +319,39 @@ export default function Fornecedores() {
           </tbody>
         </table>
       </div>
+
+      {fornData.length > 0 && (
+        <div className="pagination">
+          <span className="pagination-info">
+            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, fornData.length)} de {fornData.length}
+          </span>
+          <div className="pagination-btns">
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.max(1, p - 1))}
+              disabled={paginaAtual === 1}
+            >
+              Anterior
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+              <button
+                key={n}
+                className={`pagination-btn ${n === paginaAtual ? 'active' : ''}`}
+                onClick={() => setPaginaAtual(n)}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))}
+              disabled={paginaAtual === totalPaginas}
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
 
       {modalAberto && (
         <ModalFornecedor onClose={() => setModalAberto(false)} onSalvo={carregarFornecedores} />
@@ -272,6 +361,13 @@ export default function Fornecedores() {
           fornecedor={fornecedorEditando}
           onClose={() => setFornecedorEditando(null)}
           onSalvo={carregarFornecedores}
+        />
+      )}
+      {fornecedorExcluindo && (
+        <ModalConfirmarExclusao
+          fornecedor={fornecedorExcluindo}
+          onClose={() => setFornecedorExcluindo(null)}
+          onExcluido={carregarFornecedores}
         />
       )}
     </div>
