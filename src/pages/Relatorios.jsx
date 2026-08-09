@@ -21,6 +21,15 @@ const COR_VINHO = [107, 26, 42]
 const COR_CREME = [247, 237, 216]
 const COR_CINZA = [122, 106, 90]
 
+// jsPDF não renderiza emoji com a fonte padrão (vira caractere quebrado),
+// então tiramos o emoji só na hora de montar o PDF — na tela continua normal.
+function semEmoji(texto) {
+  if (!texto) return texto
+  return texto
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '')
+    .trim()
+}
+
 function iniciarPdf(titulo, subtitulo) {
   const doc = new jsPDF()
   const hoje = new Date().toLocaleDateString('pt-BR')
@@ -106,7 +115,7 @@ function gerarProducaoPorPeriodo() {
   autoTable(doc, {
     startY: 60,
     head: [['Data / Hora', 'Produto', 'Qtd.', 'Responsável', 'Insumos Utilizados']],
-    body: ordens.map(o => [o.data, o.produto, `${o.qtd} un`, o.responsavel, o.insumos]),
+    body: ordens.map(o => [o.data, semEmoji(o.produto), `${o.qtd} un`, o.responsavel, o.insumos]),
     headStyles: { fillColor: COR_VINHO, textColor: COR_CREME, fontSize: 8.5 },
     bodyStyles: { fontSize: 7.8 },
     alternateRowStyles: { fillColor: [250, 245, 236] },
@@ -120,7 +129,7 @@ function gerarMovimentacoes() {
   autoTable(doc, {
     startY: 60,
     head: [['Data / Hora', 'Tipo', 'Produto', 'Qtd.', 'Responsável']],
-    body: ordens.map(o => [o.data, 'Saída (produção)', o.produto, `${o.qtd} un`, o.responsavel]),
+    body: ordens.map(o => [o.data, 'Saída (produção)', semEmoji(o.produto), `${o.qtd} un`, o.responsavel]),
     headStyles: { fillColor: COR_VINHO, textColor: COR_CREME, fontSize: 8.5 },
     bodyStyles: { fontSize: 8 },
     alternateRowStyles: { fillColor: [250, 245, 236] },
@@ -152,7 +161,7 @@ function gerarCustoDeProducao() {
   autoTable(doc, {
     startY: 60,
     head: [['Produto', 'Qtd. de Insumos', 'Custo Estimado']],
-    body: receitas.map(r => [r.produto, `${r.insumos} insumos`, `R$ ${r.custo.toFixed(2)}`]),
+    body: receitas.map(r => [semEmoji(r.produto), `${r.insumos} insumos`, `R$ ${r.custo.toFixed(2)}`]),
     foot: [['', 'Total', `R$ ${custoTotal.toFixed(2)}`]],
     headStyles: { fillColor: COR_VINHO, textColor: COR_CREME, fontSize: 8.5 },
     bodyStyles: { fontSize: 8 },
