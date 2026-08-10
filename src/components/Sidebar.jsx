@@ -7,7 +7,7 @@ import {
 
 
 export default function Sidebar({ onLogout }) {
-  const { currentPage, navigate, fotoPerfil } = useApp()
+  const { currentPage, navigate, fotoPerfil, usuario } = useApp()
   const [totalAlertas, setTotalAlertas] = useState(0)
 
   useEffect(() => {
@@ -16,6 +16,9 @@ export default function Sidebar({ onLogout }) {
       .then(data => setTotalAlertas(data.length))
   }, [currentPage])
 
+  const nomeExibido = usuario?.nome || 'Dany Massas'
+  const emailExibido = usuario?.email || 'dany@massas.com'
+  const inicial = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
 
   const navItems = [
     {
@@ -99,11 +102,11 @@ export default function Sidebar({ onLogout }) {
           <div style={styles.userAvatar}>
             {fotoPerfil
               ? <img src={fotoPerfil} alt="Foto de perfil" style={styles.userAvatarFoto} />
-              : 'D'}
+              : inicial}
           </div>
           <div style={styles.userInfo}>
-            <span style={styles.userName}>Dany Massas</span>
-            <span style={styles.userEmail}>dany@massas.com</span>
+            <span style={styles.userName}>{nomeExibido}</span>
+            <span style={styles.userEmail}>{emailExibido}</span>
           </div>
           <button onClick={onLogout} style={styles.logoutBtn} title="Sair">
             <IconLogout width={16} height={16} />
