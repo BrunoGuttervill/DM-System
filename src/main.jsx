@@ -8,20 +8,29 @@ import { ThemeProvider } from './context/ThemeContext.jsx'
 
 function Root() {
   const [logado, setLogado] = useState(false)
+  const [usuario, setUsuario] = useState(null)
 
-  const handleLogout = () => setLogado(false)
+  const handleLogin = (dados) => {
+    setUsuario(dados)
+    setLogado(true)
+  }
+
+  const handleLogout = () => {
+    setLogado(false)
+    setUsuario(null)
+  }
 
   if (!logado) {
     return (
       <ThemeProvider>
-        <Login onLogin={() => setLogado(true)} />
+        <Login onLogin={handleLogin} />
       </ThemeProvider>
     )
   }
 
   return (
     <ThemeProvider>
-      <AppProvider>
+      <AppProvider usuarioInicial={usuario}>
         <App onLogout={handleLogout} />
       </AppProvider>
     </ThemeProvider>
