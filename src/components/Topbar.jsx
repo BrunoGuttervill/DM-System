@@ -15,7 +15,7 @@ const pageTitles = {
 }
 
 export default function Topbar() {
-  const { currentPage, navigate, fotoPerfil } = useApp()
+  const { currentPage, navigate, fotoPerfil, usuario } = useApp()
   const [totalAlertas, setTotalAlertas] = useState(0)
 
   useEffect(() => {
@@ -23,6 +23,8 @@ export default function Topbar() {
       .then(r => r.json())
       .then(data => setTotalAlertas(data.length))
   }, [currentPage])
+
+  const inicial = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
 
   return (
     <header style={styles.topbar}>
@@ -33,10 +35,10 @@ export default function Topbar() {
           Alertas
           <span style={styles.badge}>{totalAlertas}</span>
         </button>
-        <div style={styles.avatar}>
+        <div style={styles.avatar} title={usuario?.nome}>
           {fotoPerfil
             ? <img src={fotoPerfil} alt="Foto de perfil" style={styles.avatarFoto} />
-            : 'AD'}
+            : inicial}
         </div>
       </div>
     </header>
