@@ -97,19 +97,29 @@ export default function Login({ onLogin }) {
   const [erro, setErro] = useState('')
   const [modalCadastro, setModalCadastro] = useState(false)
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setErro('')
     if (!email || !senha) { setErro('Preencha todos os campos.'); return }
     setCarregando(true)
-    setTimeout(() => {
+    try {
+      const res = await fetch('http://localhost:3000/api/usuario/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, senha }),
+      })
+      const dados = await res.json()
       setCarregando(false)
-      if (email === 'dany@massas.com' && senha === '123456') {
-        onLogin?.()
-      } else {
-        setErro('E-mail ou senha incorretos.')
+
+      if (!res.ok) {
+        setErro(dados.error || dados.erro || 'E-mail ou senha incorretos.')
+        return
       }
-    }, 1200)
+      onLogin?.(dados)
+    } catch (err) {
+      setCarregando(false)
+      setErro('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
+    }
   }
 
   const handleRecuperar = (e) => {
@@ -358,6 +368,7 @@ function Field({ label, icon, children }) {
 function ModalCadastro({ onClose, onCriado }) {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
+  const [perfil, setPerfil] = useState('Operador')
   const [senha, setSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
   const [verSenha, setVerSenha] = useState(false)
@@ -368,7 +379,7 @@ function ModalCadastro({ onClose, onCriado }) {
 
   const validarEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setErro('')
 
@@ -378,11 +389,26 @@ function ModalCadastro({ onClose, onCriado }) {
     if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
 
     setCarregando(true)
-    // Sem rota de cadastro no backend ainda — simula o fluxo por enquanto.
-    setTimeout(() => {
+    try {
+      const res = await fetch('http://localhost:3000/api/usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email, senha, perfil }),
+      })
+      const dados = await res.json()
+
+      if (!res.ok) {
+        setErro(dados.error || dados.erro || 'Não foi possível criar a conta. Tente novamente.')
+        setCarregando(false)
+        return
+      }
+
       setCarregando(false)
       setSucesso(true)
-    }, 1100)
+    } catch (err) {
+      setErro('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
+      setCarregando(false)
+    }
   }
 
   return createPortal(
@@ -421,6 +447,19 @@ function ModalCadastro({ onClose, onCriado }) {
                   autoComplete="email"
                 />
               </Field>
+
+              <div style={s.grupo}>
+                <label style={s.label}>Perfil de acesso</label>
+                <select
+                  value={perfil}
+                  onChange={e => setPerfil(e.target.value)}
+                  style={s.selectPerfil}
+                >
+                  <option value="Administrador">Administrador</option>
+                  <option value="Operador">Operador</option>
+                  <option value="Visualizador">Visualizador</option>
+                </select>
+              </div>
 
               <div style={s.formRowModal}>
                 <Field label="Senha" icon={<IconLock />}>
@@ -743,6 +782,11 @@ const s = {
     pointerEvents: 'none',
   },
   input: INPUT,
+  selectPerfil: {
+    ...INPUT,
+    padding: '11px 14px',
+    cursor: 'pointer',
+  },
   eyeBtn: {
     position: 'absolute',
     right: 12,
