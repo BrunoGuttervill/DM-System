@@ -69,7 +69,7 @@ function BotaoTema({ icone, label, ativo, onClick }) {
 
 export default function Configuracoes({ onLogout }) {
   const { tema, definirTema } = useTheme()
-  const { showToast, fotoPerfil, setFotoPerfil, usuario } = useApp()
+  const { showToast, fotoPerfil, setFotoPerfil, usuario, setUsuario } = useApp()
 
   const [notifEstoque, setNotifEstoque] = useState(true)
   const [notifVencimento, setNotifVencimento] = useState(true)
@@ -77,10 +77,14 @@ export default function Configuracoes({ onLogout }) {
   const [modalLogout, setModalLogout] = useState(false)
   const inputFotoRef = useRef(null)
 
-  const nomeCompleto = usuario?.nome || 'Dany Massas'
-  const [primeiroNome, ...resto] = nomeCompleto.trim().split(' ')
-  const sobrenome = resto.join(' ')
-  const emailUsuario = usuario?.email || 'dany@massas.com'
+  const nomeCompletoInicial = usuario?.nome || 'Dany Massas'
+  const [primeiroNomeInicial, ...restoInicial] = nomeCompletoInicial.trim().split(' ')
+
+  const [primeiroNome, setPrimeiroNome] = useState(primeiroNomeInicial)
+  const [sobrenome, setSobrenome] = useState(restoInicial.join(' '))
+  const [emailCampo, setEmailCampo] = useState(usuario?.email || 'dany@massas.com')
+  const [salvandoPerfil, setSalvandoPerfil] = useState(false)
+
   const inicialAvatar = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
 
   const escolherFoto = () => inputFotoRef.current?.click()
@@ -104,7 +108,40 @@ export default function Configuracoes({ onLogout }) {
     e.target.value = '' // permite selecionar o mesmo arquivo de novo depois
   }
 
-  const salvar = () => showToast('✅ Configurações salvas!')
+  const salvar = async () => {
+    if (!primeiroNome.trim()) { showToast('⚠️ Digite seu nome.'); return }
+    if (!emailCampo.trim()) { showToast('⚠️ Digite um e-mail.'); return }
+
+    if (!usuario?.id) {
+      showToast('❌ Não foi possível identificar o usuário logado.')
+      return
+    }
+
+    const nomeCompleto = `${primeiroNome.trim()} ${sobrenome.trim()}`.trim()
+
+    setSalvandoPerfil(true)
+    try {
+      const res = await fetch(`http://localhost:3000/api/usuario/${usuario.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: nomeCompleto, email: emailCampo.trim() }),
+      })
+      const dados = await res.json()
+
+      if (!res.ok) {
+        showToast(dados.error || dados.erro || '❌ Não foi possível salvar as alterações.')
+        return
+      }
+
+      // Atualiza o contexto global — Sidebar, Topbar e aqui mesmo refletem na hora
+      setUsuario(u => ({ ...u, ...dados }))
+      showToast('✅ Configurações salvas!')
+    } catch (err) {
+      showToast('❌ Não foi possível conectar ao servidor.')
+    } finally {
+      setSalvandoPerfil(false)
+    }
+  }
 
   return (
     <div className="page-fade" style={s.page}>
@@ -141,16 +178,16 @@ export default function Configuracoes({ onLogout }) {
             <div style={s.formRow}>
               <div style={s.grupo}>
                 <label style={s.label}>Nome</label>
-                <input style={s.input} defaultValue={primeiroNome} />
+                <input style={s.input} value={primeiroNome} onChange={e => setPrimeiroNome(e.target.value)} />
               </div>
               <div style={s.grupo}>
                 <label style={s.label}>Sobrenome</label>
-                <input style={s.input} defaultValue={sobrenome} />
+                <input style={s.input} value={sobrenome} onChange={e => setSobrenome(e.target.value)} />
               </div>
             </div>
             <div style={s.grupo}>
               <label style={s.label}>E-mail</label>
-              <input style={s.input} defaultValue={emailUsuario} type="email" />
+              <input style={s.input} value={emailCampo} onChange={e => setEmailCampo(e.target.value)} type="email" />
             </div>
             <div style={s.grupo}>
               <label style={s.label}>Empresa</label>
@@ -233,8 +270,8 @@ export default function Configuracoes({ onLogout }) {
 
       {}
       <div style={s.rodape}>
-        <button className="btn btn-primary" style={s.btnSalvarRodape} onClick={salvar}>
-          Salvar alterações
+        <button className="btn btn-primary" style={s.btnSalvarRodape} onClick={salvar} disabled={salvandoPerfil}>
+          {salvandoPerfil ? 'Salvando...' : 'Salvar alterações'}
         </button>
       </div>
 
