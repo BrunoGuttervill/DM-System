@@ -69,13 +69,19 @@ function BotaoTema({ icone, label, ativo, onClick }) {
 
 export default function Configuracoes({ onLogout }) {
   const { tema, definirTema } = useTheme()
-  const { showToast, fotoPerfil, setFotoPerfil } = useApp()
+  const { showToast, fotoPerfil, setFotoPerfil, usuario } = useApp()
 
   const [notifEstoque, setNotifEstoque] = useState(true)
   const [notifVencimento, setNotifVencimento] = useState(true)
   const [notifProducao, setNotifProducao] = useState(false)
   const [modalLogout, setModalLogout] = useState(false)
   const inputFotoRef = useRef(null)
+
+  const nomeCompleto = usuario?.nome || 'Dany Massas'
+  const [primeiroNome, ...resto] = nomeCompleto.trim().split(' ')
+  const sobrenome = resto.join(' ')
+  const emailUsuario = usuario?.email || 'dany@massas.com'
+  const inicialAvatar = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
 
   const escolherFoto = () => inputFotoRef.current?.click()
 
@@ -118,7 +124,7 @@ export default function Configuracoes({ onLogout }) {
             {fotoPerfil ? (
               <img src={fotoPerfil} alt="Foto de perfil" style={s.avatarFoto} />
             ) : (
-              <span style={s.avatarLetra}>D</span>
+              <span style={s.avatarLetra}>{inicialAvatar}</span>
             )}
             <button style={s.avatarEdit} title="Trocar foto" onClick={escolherFoto}>
               <IconEdit width={12} height={12} />
@@ -135,16 +141,16 @@ export default function Configuracoes({ onLogout }) {
             <div style={s.formRow}>
               <div style={s.grupo}>
                 <label style={s.label}>Nome</label>
-                <input style={s.input} defaultValue="Dany" />
+                <input style={s.input} defaultValue={primeiroNome} />
               </div>
               <div style={s.grupo}>
                 <label style={s.label}>Sobrenome</label>
-                <input style={s.input} defaultValue="Massas" />
+                <input style={s.input} defaultValue={sobrenome} />
               </div>
             </div>
             <div style={s.grupo}>
               <label style={s.label}>E-mail</label>
-              <input style={s.input} defaultValue="dany@massas.com" type="email" />
+              <input style={s.input} defaultValue={emailUsuario} type="email" />
             </div>
             <div style={s.grupo}>
               <label style={s.label}>Empresa</label>
