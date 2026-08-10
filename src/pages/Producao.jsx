@@ -1,24 +1,28 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { produtoOptions } from '../data/mockData'
-import { IconTrash } from '../components/Icons'
 
 function ModalProducao({ onClose, onSalvo }) {
   const { showToast } = useApp()
-  const now = new Date()
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-  const iso = local.toISOString().slice(0, 16)
 
-  const [produto, setProduto] = useState(produtoOptions[0])
+  
   const [qtd, setQtd] = useState('')
   const [responsavel, setResponsavel] = useState('')
-  const [data, setData] = useState(iso)
   const [observacoes, setObservacoes] = useState('')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [pizzas, setPizzas] = useState([])
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/produtos')
+    .then(r => r.json())
+    .then(data => setPizzas(data))
+  }, []);
+
+  const [pizzaId, setPizzaId] = useState('');
 
   const salvar = async () => {
+    if (!pizzaId) { setErro('Selecione um produto'); return }
     if (!qtd || parseInt(qtd) < 1) { setErro('Informe uma quantidade válida'); return }
     if (!responsavel.trim()) { setErro('Informe o responsável'); return }
     setErro('')
@@ -27,7 +31,7 @@ function ModalProducao({ onClose, onSalvo }) {
       const res = await fetch('http://localhost:3000/api/producao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ produto, qtd: parseInt(qtd), responsavel, data, observacoes }),
+        body: JSON.stringify({ pizzaId, quantidade: parseInt(qtd), responsavel, observacoes }),
       })
       if (!res.ok) throw new Error('Falha ao salvar')
       onClose()
@@ -44,8 +48,9 @@ function ModalProducao({ onClose, onSalvo }) {
     <Modal title="Registrar Produção" onClose={onClose}>
       <div className="form-group">
         <label>Produto Fabricado</label>
-        <select value={produto} onChange={e => setProduto(e.target.value)}>
-          {produtoOptions.map(p => <option key={p}>{p}</option>)}
+        <select value={pizzaId} onChange={e => setPizzaId(e.target.value)}>
+          <option value="">Selecione um produto</option>
+          {pizzas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
         </select>
       </div>
       <div className="form-row">
@@ -57,10 +62,6 @@ function ModalProducao({ onClose, onSalvo }) {
           <label>Responsável</label>
           <input type="text" placeholder="Nome do operador" value={responsavel} onChange={e => setResponsavel(e.target.value)} />
         </div>
-      </div>
-      <div className="form-group">
-        <label>Data e Hora</label>
-        <input type="datetime-local" value={data} onChange={e => setData(e.target.value)} />
       </div>
       <div className="form-group">
         <label>Observações</label>
@@ -79,15 +80,13 @@ function ModalProducao({ onClose, onSalvo }) {
 
 function ModalEditarProducao({ ordem, onClose, onSalvo }) {
   const { showToast } = useApp()
-  const [produto, setProduto] = useState(ordem.produto || '')
   const [qtd, setQtd] = useState(ordem.qtd ?? '')
   const [responsavel, setResponsavel] = useState(ordem.responsavel || '')
-  const [insumos, setInsumos] = useState(ordem.insumos || '')
+  const [observacoes, setObservacoes] = useState(ordem.observacoes || '')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
   const salvar = async () => {
-    if (!produto.trim()) { setErro('Informe o produto'); return }
     if (!qtd || parseInt(qtd) < 1) { setErro('Informe uma quantidade válida'); return }
     if (!responsavel.trim()) { setErro('Informe o responsável'); return }
     setErro('')
@@ -96,7 +95,7 @@ function ModalEditarProducao({ ordem, onClose, onSalvo }) {
       const res = await fetch(`http://localhost:3000/api/producao/${ordem.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ produto, qtd: parseInt(qtd), responsavel, insumos }),
+        body: JSON.stringify({ quantidade: parseInt(qtd), responsavel, observacoes }),
       })
       if (!res.ok) throw new Error('Falha ao salvar')
       onClose()
@@ -111,10 +110,6 @@ function ModalEditarProducao({ ordem, onClose, onSalvo }) {
 
   return (
     <Modal title="Editar Produção" onClose={onClose}>
-      <div className="form-group">
-        <label>Produto</label>
-        <input type="text" value={produto} onChange={e => setProduto(e.target.value)} />
-      </div>
       <div className="form-row">
         <div className="form-group">
           <label>Quantidade Produzida</label>
@@ -126,8 +121,8 @@ function ModalEditarProducao({ ordem, onClose, onSalvo }) {
         </div>
       </div>
       <div className="form-group">
-        <label>Insumos Consumidos</label>
-        <textarea rows="3" value={insumos} onChange={e => setInsumos(e.target.value)} />
+        <label>Observações</label>
+        <textarea rows="2" value={observacoes} onChange={e => setObservacoes(e.target.value)} />
       </div>
       {erro && <span className="form-error">{erro}</span>}
       <div className="modal-actions">
@@ -140,44 +135,9 @@ function ModalEditarProducao({ ordem, onClose, onSalvo }) {
   )
 }
 
-function ModalConfirmarExclusao({ ordem, onClose, onExcluido }) {
-  const { showToast } = useApp()
-  const [excluindo, setExcluindo] = useState(false)
-
-  const confirmar = async () => {
-    setExcluindo(true)
-    try {
-      const res = await fetch(`http://localhost:3000/api/producao/${ordem.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Falha ao excluir')
-      onClose()
-      showToast('🗑️ Produção excluída.')
-      await onExcluido()
-    } catch (err) {
-      showToast('❌ Não foi possível excluir. Tente novamente.')
-      setExcluindo(false)
-    }
-  }
-
-  return (
-    <Modal title="Excluir produção?" onClose={onClose}>
-      <p style={{ fontSize: '0.9rem', color: 'var(--texto)', lineHeight: 1.6, marginBottom: 8 }}>
-        Tem certeza que deseja excluir o registro de produção de <strong>{ordem.produto}</strong> ({ordem.qtd} un,{' '}
-        {ordem.responsavel})? Essa ação não pode ser desfeita.
-      </p>
-      <div className="modal-actions">
-        <button className="btn btn-secondary" onClick={onClose} disabled={excluindo}>Cancelar</button>
-        <button className="btn btn-danger" onClick={confirmar} disabled={excluindo}>
-          {excluindo ? 'Excluindo...' : 'Sim, excluir'}
-        </button>
-      </div>
-    </Modal>
-  )
-}
-
 export default function Producao() {
   const [modalAberto, setModalAberto] = useState(false)
   const [ordemEditando, setOrdemEditando] = useState(null)
-  const [ordemExcluindo, setOrdemExcluindo] = useState(null)
   const [ordensData, setOrdensData] = useState([])
   const [paginaAtual, setPaginaAtual] = useState(1)
   const ITENS_POR_PAGINA = 10
@@ -239,19 +199,9 @@ export default function Producao() {
                   <td>{o.responsavel}</td>
                   <td style={{ color: 'var(--cinza)', fontSize: '0.82rem' }}>{o.insumos}</td>
                   <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => setOrdemEditando(o)}>
-                        Editar
-                      </button>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        style={{ color: 'var(--vermelho)' }}
-                        onClick={() => setOrdemExcluindo(o)}
-                        title="Excluir"
-                      >
-                        <IconTrash width={14} height={14} />
-                      </button>
-                    </div>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setOrdemEditando(o)}>
+                      Editar
+                    </button>
                   </td>
                 </tr>
               ))
@@ -302,14 +252,7 @@ export default function Producao() {
           onClose={() => setOrdemEditando(null)}
           onSalvo={carregarOrdens}
         />
-      )}
-      {ordemExcluindo && (
-        <ModalConfirmarExclusao
-          ordem={ordemExcluindo}
-          onClose={() => setOrdemExcluindo(null)}
-          onExcluido={carregarOrdens}
-        />
-      )}
+      )}   
     </div>
   )
 }
