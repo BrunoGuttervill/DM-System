@@ -2,10 +2,11 @@ import { createContext, useContext, useState, useCallback, useRef } from 'react'
 
 const AppContext = createContext(null)
 
-export function AppProvider({ children }) {
+export function AppProvider({ children, usuarioInicial = null }) {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [toast, setToast] = useState(null)
   const [fotoPerfil, setFotoPerfil] = useState(null)
+  const [usuario, setUsuario] = useState(usuarioInicial)
   const timerRef = useRef(null)
 
   const navigate = useCallback((page) => {
@@ -19,7 +20,11 @@ export function AppProvider({ children }) {
   }, [])
 
   return (
-    <AppContext.Provider value={{ currentPage, navigate, toast, showToast, fotoPerfil, setFotoPerfil }}>
+    <AppContext.Provider value={{
+      currentPage, navigate, toast, showToast,
+      fotoPerfil, setFotoPerfil,
+      usuario, setUsuario,
+    }}>
       {children}
     </AppContext.Provider>
   )
