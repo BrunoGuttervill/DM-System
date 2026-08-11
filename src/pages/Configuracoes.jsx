@@ -130,6 +130,39 @@ function ModalTrocarSenha({ usuarioId, onClose }) {
   )
 }
 
+function ModalLimparCache({ onClose }) {
+  const [limpando, setLimpando] = useState(false)
+
+  const confirmar = async () => {
+    setLimpando(true)
+    try {
+      localStorage.clear()
+      sessionStorage.clear()
+      if ('caches' in window) {
+        const chaves = await caches.keys()
+        await Promise.all(chaves.map(k => caches.delete(k)))
+      }
+    } finally {
+      window.location.reload()
+    }
+  }
+
+  return (
+    <Modal title="Limpar cache do sistema?" onClose={onClose}>
+      <p style={{ fontSize: '0.9rem', color: 'var(--texto)', lineHeight: 1.6, marginBottom: 8 }}>
+        Isso remove dados temporários salvos no navegador (incluindo a preferência de tema claro/escuro)
+        e recarrega a página. Não afeta os dados salvos no banco (insumos, produtos, fornecedores etc.).
+      </p>
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose} disabled={limpando}>Cancelar</button>
+        <button className="btn btn-primary" onClick={confirmar} disabled={limpando}>
+          {limpando ? 'Limpando...' : 'Sim, limpar'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 export default function Configuracoes({ onLogout }) {
   const { tema, definirTema } = useTheme()
   const { showToast, fotoPerfil, setFotoPerfil, usuario, setUsuario } = useApp()
@@ -139,6 +172,7 @@ export default function Configuracoes({ onLogout }) {
   const [notifProducao, setNotifProducao] = useState(false)
   const [modalLogout, setModalLogout] = useState(false)
   const [modalSenha, setModalSenha] = useState(false)
+  const [modalCache, setModalCache] = useState(false)
   const inputFotoRef = useRef(null)
 
   const nomeCompletoInicial = usuario?.nome || 'Dany Massas'
@@ -310,7 +344,7 @@ export default function Configuracoes({ onLogout }) {
         </Linha>
         <div style={s.divisor} />
         <Linha icone={<IconTrash width={18} height={18} />} label="Limpar cache do sistema" descricao="Remove dados temporários armazenados localmente">
-          <button className="btn btn-secondary btn-sm" onClick={() => showToast('🧹 Cache limpo!')}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModalCache(true)}>
             Limpar
           </button>
         </Linha>
@@ -338,6 +372,11 @@ export default function Configuracoes({ onLogout }) {
           {salvandoPerfil ? 'Salvando...' : 'Salvar alterações'}
         </button>
       </div>
+
+      {}
+      {modalCache && (
+        <ModalLimparCache onClose={() => setModalCache(false)} />
+      )}
 
       {}
       {modalSenha && usuario?.id && (
