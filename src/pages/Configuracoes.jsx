@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useApp } from '../context/AppContext'
+import Modal from '../components/Modal'
 import {
   IconPalette, IconWheat, IconClock, IconFactory,
   IconKey, IconSmartphone, IconBox, IconTrash,
@@ -67,6 +68,68 @@ function BotaoTema({ icone, label, ativo, onClick }) {
   )
 }
 
+function ModalTrocarSenha({ usuarioId, onClose }) {
+  const { showToast } = useApp()
+  const [senhaAtual, setSenhaAtual] = useState('')
+  const [novaSenha, setNovaSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  const salvar = async () => {
+    setErro('')
+    if (!senhaAtual) { setErro('Digite sua senha atual.'); return }
+    if (novaSenha.length < 6) { setErro('A nova senha precisa ter pelo menos 6 caracteres.'); return }
+    if (novaSenha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
+
+    setSalvando(true)
+    try {
+      const res = await fetch(`http://localhost:3000/api/usuario/${usuarioId}/senha`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senhaAtual, novaSenha }),
+      })
+      const dados = await res.json()
+
+      if (!res.ok) {
+        setErro(dados.error || dados.erro || 'Não foi possível trocar a senha.')
+        setSalvando(false)
+        return
+      }
+
+      onClose()
+      showToast('✅ Senha alterada com sucesso!')
+    } catch (err) {
+      setErro('Não foi possível conectar ao servidor.')
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Modal title="Alterar senha" onClose={onClose}>
+      <div className="form-group">
+        <label>Senha atual</label>
+        <input type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} placeholder="••••••••" />
+      </div>
+      <div className="form-group">
+        <label>Nova senha</label>
+        <input type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} placeholder="Mín. 6 caracteres" />
+      </div>
+      <div className="form-group">
+        <label>Confirmar nova senha</label>
+        <input type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} placeholder="Repita a nova senha" />
+      </div>
+      {erro && <span className="form-error">{erro}</span>}
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose} disabled={salvando}>Cancelar</button>
+        <button className="btn btn-primary" onClick={salvar} disabled={salvando}>
+          {salvando ? 'Salvando...' : 'Salvar nova senha'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 export default function Configuracoes({ onLogout }) {
   const { tema, definirTema } = useTheme()
   const { showToast, fotoPerfil, setFotoPerfil, usuario, setUsuario } = useApp()
@@ -75,6 +138,7 @@ export default function Configuracoes({ onLogout }) {
   const [notifVencimento, setNotifVencimento] = useState(true)
   const [notifProducao, setNotifProducao] = useState(false)
   const [modalLogout, setModalLogout] = useState(false)
+  const [modalSenha, setModalSenha] = useState(false)
   const inputFotoRef = useRef(null)
 
   const nomeCompletoInicial = usuario?.nome || 'Dany Massas'
@@ -225,7 +289,7 @@ export default function Configuracoes({ onLogout }) {
       {}
       <Secao titulo="Segurança">
         <Linha icone={<IconKey width={18} height={18} />} label="Alterar senha" descricao="Redefina sua senha de acesso">
-          <button className="btn btn-secondary btn-sm" onClick={() => showToast('📧 Link enviado para seu e-mail!')}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setModalSenha(true)}>
             Redefinir
           </button>
         </Linha>
@@ -274,6 +338,11 @@ export default function Configuracoes({ onLogout }) {
           {salvandoPerfil ? 'Salvando...' : 'Salvar alterações'}
         </button>
       </div>
+
+      {}
+      {modalSenha && usuario?.id && (
+        <ModalTrocarSenha usuarioId={usuario.id} onClose={() => setModalSenha(false)} />
+      )}
 
       {}
       {modalLogout && createPortal(
