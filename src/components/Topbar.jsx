@@ -25,6 +25,7 @@ export default function Topbar() {
   }, [currentPage])
 
   const inicial = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
+  const fotoExibida = fotoPerfil || (usuario?.fotoUrl ? `http://localhost:3000${usuario.fotoUrl}` : null)
 
   return (
     <header style={styles.topbar}>
@@ -36,8 +37,8 @@ export default function Topbar() {
           <span style={styles.badge}>{totalAlertas}</span>
         </button>
         <div style={styles.avatar} title={usuario?.nome}>
-          {fotoPerfil
-            ? <img src={fotoPerfil} alt="Foto de perfil" style={styles.avatarFoto} />
+          {fotoExibida
+            ? <img src={fotoExibida} alt="Foto de perfil" style={styles.avatarFoto} />
             : inicial}
         </div>
       </div>
