@@ -19,6 +19,7 @@ export default function Sidebar({ onLogout }) {
   const nomeExibido = usuario?.nome || 'Dany Massas'
   const emailExibido = usuario?.email || 'dany@massas.com'
   const inicial = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
+  const fotoExibida = fotoPerfil || (usuario?.fotoUrl ? `http://localhost:3000${usuario.fotoUrl}` : null)
 
   const navItems = [
     {
@@ -100,8 +101,8 @@ export default function Sidebar({ onLogout }) {
         {/* Info do usuário + logout */}
         <div style={styles.userRow}>
           <div style={styles.userAvatar}>
-            {fotoPerfil
-              ? <img src={fotoPerfil} alt="Foto de perfil" style={styles.userAvatarFoto} />
+            {fotoExibida
+              ? <img src={fotoExibida} alt="Foto de perfil" style={styles.userAvatarFoto} />
               : inicial}
           </div>
           <div style={styles.userInfo}>

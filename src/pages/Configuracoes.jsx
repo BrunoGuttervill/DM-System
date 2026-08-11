@@ -184,10 +184,11 @@ export default function Configuracoes({ onLogout }) {
   const [salvandoPerfil, setSalvandoPerfil] = useState(false)
 
   const inicialAvatar = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
+  const fotoExibida = fotoPerfil || (usuario?.fotoUrl ? `http://localhost:3000${usuario.fotoUrl}` : null)
 
   const escolherFoto = () => inputFotoRef.current?.click()
 
-  const handleFotoSelecionada = (e) => {
+  const handleFotoSelecionada = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -200,10 +201,36 @@ export default function Configuracoes({ onLogout }) {
       return
     }
 
-    const url = URL.createObjectURL(file)
-    setFotoPerfil(url)
-    showToast('✅ Foto de perfil atualizada!')
-    e.target.value = '' // permite selecionar o mesmo arquivo de novo depois
+    // Preview imediato, enquanto o upload acontece
+    const preview = URL.createObjectURL(file)
+    setFotoPerfil(preview)
+    e.target.value = ''
+
+    if (!usuario?.id) {
+      showToast('❌ Não foi possível identificar o usuário logado.')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('foto', file)
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/usuario/${usuario.id}/foto`, {
+        method: 'PUT',
+        body: formData,
+      })
+      const dados = await res.json()
+
+      if (!res.ok) {
+        showToast(dados.error || dados.erro || '❌ Não foi possível salvar a foto.')
+        return
+      }
+
+      setUsuario(u => ({ ...u, ...dados }))
+      showToast('✅ Foto de perfil atualizada!')
+    } catch (err) {
+      showToast('❌ Não foi possível conectar ao servidor.')
+    }
   }
 
   const salvar = async () => {
@@ -256,8 +283,8 @@ export default function Configuracoes({ onLogout }) {
       <Secao titulo="Perfil">
         <div style={s.perfilWrap}>
           <div style={s.avatar}>
-            {fotoPerfil ? (
-              <img src={fotoPerfil} alt="Foto de perfil" style={s.avatarFoto} />
+            {fotoExibida ? (
+              <img src={fotoExibida} alt="Foto de perfil" style={s.avatarFoto} />
             ) : (
               <span style={s.avatarLetra}>{inicialAvatar}</span>
             )}
