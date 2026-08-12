@@ -825,3 +825,56 @@ td strong { font-weight: 600; color: var(--escuro); }
 .text-strong { font-weight: 600; color: var(--escuro); }
 .text-sm     { font-size: 0.8rem; }
 .text-xs     { font-size: 0.72rem; }
+
+
+
+
+
+
+/* ===== Fichas Técnicas ===== */
+.fichas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.ficha-card {
+  background: var(--card-bg, #2A1A0E);
+  border: 1px solid var(--table-border, #2E1E10);
+  border-radius: 12px;
+  padding: 18px;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.ficha-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--terra, #C97B4A);
+}
+
+.ficha-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ficha-card-nome {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--texto, #F5E6D3);
+}
+
+.ficha-card-badge {
+  background: var(--terra, #C97B4A);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.ficha-card-custo {
+  color: var(--cinza, #B8A088);
+  font-size: 0.9rem;
+}

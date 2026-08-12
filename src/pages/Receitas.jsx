@@ -21,12 +21,12 @@ function ModalNovaFicha({ onClose }) {
 
   useEffect(() => {
     fetch('http://localhost:3000/api/produtos')
-    .then(r => r.json())
-    .then(data => setPizzas(data))
+      .then(r => r.json())
+      .then(data => setPizzas(data))
 
     fetch('http://localhost:3000/api/insumos')
-    .then(r => r.json())
-    .then(data => setInsumosData(data))
+      .then(r => r.json())
+      .then(data => setInsumosData(data))
   }, []);
 
   const atualizarLinha = (id, campo, valor) => {
@@ -51,7 +51,7 @@ function ModalNovaFicha({ onClose }) {
     return newErrors
   }
 
-  const getUnidadesBase = (insumoId) =>{
+  const getUnidadesBase = (insumoId) => {
     const insumo = insumosData.find(i => i.id === parseInt(insumoId))
     return insumo ? insumo.unidadeBase : ''
   }
@@ -65,47 +65,47 @@ function ModalNovaFicha({ onClose }) {
     }
 
     const ingredientes = linhas
-    .filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
-    .map(l => {
-      const unidadeBase = getUnidadesBase(l.insumoId)
-      let qtd = parseFloat(l.qtd)
-      if(l.unidade === 'g' || l.unidade === 'ml') {
-        qtd = qtd / 1000
-      }
+      .filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
+      .map(l => {
+        const unidadeBase = getUnidadesBase(l.insumoId)
+        let qtd = parseFloat(l.qtd)
+        if (l.unidade === 'g' || l.unidade === 'ml') {
+          qtd = qtd / 1000
+        }
 
-      return {
-        insumoId: parseInt(l.insumoId),
-        qtdPorUnidade: qtd,
-        unidade: unidadeBase
-      }
-    })
-
-
+        return {
+          insumoId: parseInt(l.insumoId),
+          qtdPorUnidade: qtd,
+          unidade: unidadeBase
+        }
+      })
 
 
-    try{
-      const res = await fetch('http://localhost:3000/api/receitas',{
+
+
+    try {
+      const res = await fetch('http://localhost:3000/api/receitas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pizzaId: parseInt(pizzaId),
           custo: parseFloat(custo),
           ingredientes,
+        })
       })
-    })
-    if(!res.ok) {
-      const data = await res.json()
-      throw new Error(data.error || 'falha ao salvar')
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'falha ao salvar')
+      }
+      onClose()
+      showToast(` Ficha técnica de ${pizzaId} criada com sucesso!`)
+    } catch (err) {
+      console.error(err)
+      showToast(` Erro ao salvar ficha técnica: ${err.message}`)
     }
-    onClose()
-    showToast(` Ficha técnica de ${pizzaId} criada com sucesso!`)
-  }catch(err) {
-    console.error(err)
-    showToast(` Erro ao salvar ficha técnica: ${err.message}`)
-  }
   }
 
-  
+
 
   const linhasComErro = errors.linhas
 
@@ -193,6 +193,17 @@ function ModalNovaFicha({ onClose }) {
 
 export default function Receitas() {
   const [modalNovaFicha, setModalNovaFicha] = useState(false)
+  const [fichas, setFichas] = useState([])
+
+  const carregarFichas = () => {
+    fetch('http://localhost:3000/api/receitas')
+      .then(r => r.json())
+      .then(data => setFichas(data))
+  }
+
+  useEffect(() => {
+    carregarFichas()
+  }, [])
 
   return (
     <div className="page-fade">
@@ -203,12 +214,21 @@ export default function Receitas() {
         </button>
       </div>
 
-      <div className="table-wrap" style={{ padding: '2rem', textAlign: 'center', color: 'var(--cinza)' }}>
-        <p>A listagem de fichas cadastradas será conectada ao banco em breve.</p>
-        <p style={{ fontSize: '0.85rem' }}>Por enquanto, use "+ Nova Ficha" para cadastrar receitas.</p>
+      <div className="fichas-grid">
+        {fichas.map(f => (
+          <div key={f.id} className="ficha-card">
+            <div className="ficha-card-head">
+              <span className="ficha-card-nome">{f.produtoNome}</span>
+              <span className="ficha-card-badge">{f.totalInsumos} itens</span>
+            </div>
+            <p className="ficha-card-custo">
+              Custo estimado: <strong>R$ {Number(f.custo).toFixed(2)}</strong>
+            </p>
+          </div>
+        ))}
       </div>
 
-      {modalNovaFicha && <ModalNovaFicha onClose={() => setModalNovaFicha(false)} />}
+      {modalNovaFicha && <ModalNovaFicha onClose={() => setModalNovaFicha(false)} onSucesso={carregarFichas} />}
     </div>
   )
 }
