@@ -1,23 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { receitas, fichaDetalhe, insumos, produtoOptions } from '../data/mockData'
 import { IconTrash } from '../components/Icons'
 
 const unidadeOptions = ['kg', 'g', 'litros', 'ml', 'unidade']
-const insumoOptions = insumos.map(i => i.nome)
 
 let proximoLinhaId = 1
 function novaLinha() {
-  return { id: proximoLinhaId++, insumo: '', qtd: '', unidade: 'kg' }
+  return { id: proximoLinhaId++, insumoId: '', qtd: '', unidade: 'kg' }
 }
 
 function ModalNovaFicha({ onClose }) {
   const { showToast } = useApp()
-  const [produto, setProduto] = useState('')
   const [custo, setCusto] = useState('')
   const [linhas, setLinhas] = useState([novaLinha(), novaLinha()])
   const [errors, setErrors] = useState({})
+  const [pizzas, setPizzas] = useState([])
+  const [insumosData, setInsumosData] = useState([])
+  const [pizzaId, setPizzaId] = useState('');
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/produtos')
+    .then(r => r.json())
+    .then(data => setPizzas(data))
+
+    fetch('http://localhost:3000/api/insumos')
+    .then(r => r.json())
+    .then(data => setInsumosData(data))
+  }, []);
 
   const atualizarLinha = (id, campo, valor) => {
     setLinhas(linhas.map(l => l.id === id ? { ...l, [campo]: valor } : l))
@@ -32,25 +42,70 @@ function ModalNovaFicha({ onClose }) {
 
   const validate = () => {
     const newErrors = {}
-    if (!produto.trim()) newErrors.produto = 'Informe o produto da ficha'
+    if (!pizzaId) newErrors.produto = 'Selecione um produto'
     if (!custo || parseFloat(custo) <= 0) newErrors.custo = 'Custo inválido'
 
-    const linhasValidas = linhas.filter(l => l.insumo && l.qtd && parseFloat(l.qtd) > 0)
+    const linhasValidas = linhas.filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
     if (linhasValidas.length === 0) newErrors.linhas = 'Adicione ao menos um insumo com quantidade'
 
     return newErrors
   }
 
-  const handleSalvar = () => {
+  const getUnidadesBase = (insumoId) =>{
+    const insumo = insumosData.find(i => i.id === parseInt(insumoId))
+    return insumo ? insumo.unidadeBase : ''
+  }
+
+  const handleSalvar = async () => {
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       showToast('⚠️ Preencha os campos obrigatórios corretamente')
       return
     }
+
+    const ingredientes = linhas
+    .filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
+    .map(l => {
+      const unidadeBase = getUnidadesBase(l.insumoId)
+      let qtd = parseFloat(l.qtd)
+      if(l.unidade === 'g' || l.unidade === 'ml') {
+        qtd = qtd / 1000
+      }
+
+      return {
+        insumoId: parseInt(l.insumoId),
+        qtdPorUnidade: qtd,
+        unidade: unidadeBase
+      }
+    })
+
+
+
+
+    try{
+      const res = await fetch('http://localhost:3000/api/receitas',{
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pizzaId: parseInt(pizzaId),
+          custo: parseFloat(custo),
+          ingredientes,
+      })
+    })
+    if(!res.ok) {
+      const data = await res.json()
+      throw new Error(data.error || 'falha ao salvar')
+    }
     onClose()
-    showToast(`✅ Ficha técnica de ${produto} criada com sucesso!`)
+    showToast(` Ficha técnica de ${pizzaId} criada com sucesso!`)
+  }catch(err) {
+    console.error(err)
+    showToast(` Erro ao salvar ficha técnica: ${err.message}`)
   }
+  }
+
+  
 
   const linhasComErro = errors.linhas
 
@@ -58,17 +113,14 @@ function ModalNovaFicha({ onClose }) {
     <Modal title="Nova Ficha Técnica" onClose={onClose}>
       <div className="form-group">
         <label>Produto *</label>
-        <input
-          type="text"
-          list="produto-options"
-          placeholder="Ex: Pizza Tradicional"
-          value={produto}
-          onChange={e => { setProduto(e.target.value); if (errors.produto) setErrors({ ...errors, produto: null }) }}
+        <select
+          value={pizzaId}
+          onChange={e => { setPizzaId(e.target.value); if (errors.produto) setErrors({ ...errors, produto: null }) }}
           className={errors.produto ? 'input-error' : ''}
-        />
-        <datalist id="produto-options">
-          {produtoOptions.map(p => <option key={p} value={p.replace(/^\S+\s/, '')} />)}
-        </datalist>
+        >
+          <option value="">Selecione o produto...</option>
+          {pizzas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+        </select>
         {errors.produto && <span className="form-error">{errors.produto}</span>}
       </div>
 
@@ -91,12 +143,12 @@ function ModalNovaFicha({ onClose }) {
           {linhas.map((l) => (
             <div key={l.id} style={s.linhaInsumo}>
               <select
-                value={l.insumo}
-                onChange={e => atualizarLinha(l.id, 'insumo', e.target.value)}
+                value={l.insumoId}
+                onChange={e => atualizarLinha(l.id, 'insumoId', e.target.value)}
                 style={s.selectInsumo}
               >
                 <option value="">Selecione o insumo...</option>
-                {insumoOptions.map(nome => <option key={nome} value={nome}>{nome}</option>)}
+                {insumosData.map(ins => <option key={ins.id} value={ins.id}>{ins.nome}</option>)}
               </select>
               <input
                 type="number"
@@ -140,56 +192,23 @@ function ModalNovaFicha({ onClose }) {
 }
 
 export default function Receitas() {
-  const { showToast } = useApp()
-  const [modalNovo, setModalNovo] = useState(false)
+  const [modalNovaFicha, setModalNovaFicha] = useState(false)
 
   return (
     <div className="page-fade">
       <div className="sec-header">
         <h3 className="sec-title">Fichas Técnicas</h3>
-        <button className="btn btn-primary" onClick={() => setModalNovo(true)}>
+        <button className="btn btn-terra" onClick={() => setModalNovaFicha(true)}>
           + Nova Ficha
         </button>
       </div>
 
-      <div className="prod-cards">
-        {receitas.map(r => (
-          <div
-            key={r.id}
-            className="prod-card"
-            onClick={() => showToast(`Ficha de ${r.produto} aberta!`)}
-          >
-            <div className="prod-card-icon">{r.icon}</div>
-            <h4>{r.produto}</h4>
-            <p>{r.insumos} insumos · Custo: R$ {r.custo.toFixed(2)}</p>
-          </div>
-        ))}
+      <div className="table-wrap" style={{ padding: '2rem', textAlign: 'center', color: 'var(--cinza)' }}>
+        <p>A listagem de fichas cadastradas será conectada ao banco em breve.</p>
+        <p style={{ fontSize: '0.85rem' }}>Por enquanto, use "+ Nova Ficha" para cadastrar receitas.</p>
       </div>
 
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Insumo</th>
-              <th>Quantidade</th>
-              <th>Unidade</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fichaDetalhe.map((row, i) => (
-              <tr key={i}>
-                <td><strong>{row.produto}</strong></td>
-                <td>{row.insumo}</td>
-                <td>{row.qtd}</td>
-                <td>{row.unidade}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {modalNovo && <ModalNovaFicha onClose={() => setModalNovo(false)} />}
+      {modalNovaFicha && <ModalNovaFicha onClose={() => setModalNovaFicha(false)} />}
     </div>
   )
 }
