@@ -3,23 +3,21 @@ import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
 
 function ModalProducao({ onClose, onSalvo }) {
-  const { showToast } = useApp()
+  const { showToast, token } = useApp()
 
-  
   const [qtd, setQtd] = useState('')
   const [responsavel, setResponsavel] = useState('')
   const [observacoes, setObservacoes] = useState('')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [pizzas, setPizzas] = useState([])
+  const [pizzaId, setPizzaId] = useState('')
 
   useEffect(() => {
     fetch('http://localhost:3000/api/produtos')
-    .then(r => r.json())
-    .then(data => setPizzas(data))
-  }, []);
-
-  const [pizzaId, setPizzaId] = useState('');
+      .then(r => r.json())
+      .then(data => setPizzas(data))
+  }, [])
 
   const salvar = async () => {
     if (!pizzaId) { setErro('Selecione um produto'); return }
@@ -30,7 +28,10 @@ function ModalProducao({ onClose, onSalvo }) {
     try {
       const res = await fetch('http://localhost:3000/api/producao', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ pizzaId, quantidade: parseInt(qtd), responsavel, observacoes }),
       })
       if (!res.ok) throw new Error('Falha ao salvar')
@@ -77,6 +78,7 @@ function ModalProducao({ onClose, onSalvo }) {
     </Modal>
   )
 }
+
 
 function ModalEditarProducao({ ordem, onClose, onSalvo }) {
   const { showToast } = useApp()

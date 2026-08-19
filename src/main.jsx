@@ -9,15 +9,18 @@ import { ThemeProvider } from './context/ThemeContext.jsx'
 function Root() {
   const [logado, setLogado] = useState(false)
   const [usuario, setUsuario] = useState(null)
+  const [token, setToken] = useState(null)
 
   const handleLogin = (dados) => {
-    setUsuario(dados)
+    setToken(dados.token)
+    setUsuario(dados.usuario)
     setLogado(true)
   }
 
   const handleLogout = () => {
     setLogado(false)
     setUsuario(null)
+    setToken(null)
   }
 
   if (!logado) {
@@ -30,7 +33,7 @@ function Root() {
 
   return (
     <ThemeProvider>
-      <AppProvider usuarioInicial={usuario}>
+      <AppProvider usuarioInicial={usuario} tokenInicial={token}>
         <App onLogout={handleLogout} />
       </AppProvider>
     </ThemeProvider>
