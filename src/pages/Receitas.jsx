@@ -191,9 +191,167 @@ function ModalNovaFicha({ onClose }) {
   )
 }
 
+function ModalEditarFicha({ ficha, onClose, onSucesso }) {
+  const { showToast } = useApp()
+  const [custo, setCusto] = useState(String(ficha.custo))
+  const [linhas, setLinhas] = useState([])
+  const [insumosData, setInsumosData] = useState([])
+  const [carregando, setCarregando] = useState(true)
+  const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    // busca a lista de insumos (pro select)
+    fetch('http://localhost:3000/api/insumos')
+      .then(r => r.json())
+      .then(data => setInsumosData(data))
+
+    // busca os itens ATUAIS desta ficha (pré-preenchimento)
+    fetch(`http://localhost:3000/api/receitas/${ficha.pizzaId}`)
+      .then(r => r.json())
+      .then(data => {
+        const linhasCarregadas = data.map(item => ({
+          id: proximoLinhaId++,
+          insumoId: String(item.insumoId),
+          qtd: String(item.qtdPorUnidade),
+          unidade: item.unidade || 'kg'
+        }))
+        setLinhas(linhasCarregadas.length > 0 ? linhasCarregadas : [novaLinha()])
+        setCarregando(false)
+      })
+  }, [])
+
+  const atualizarLinha = (id, campo, valor) => {
+    setLinhas(linhas.map(l => l.id === id ? { ...l, [campo]: valor } : l))
+  }
+
+  const adicionarLinha = () => setLinhas([...linhas, novaLinha()])
+
+  const removerLinha = (id) => {
+    if (linhas.length === 1) return
+    setLinhas(linhas.filter(l => l.id !== id))
+  }
+
+  const handleSalvar = async () => {
+    const newErrors = {}
+    if (!custo || parseFloat(custo) <= 0) newErrors.custo = 'Custo inválido'
+    const linhasValidas = linhas.filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
+    if (linhasValidas.length === 0) newErrors.linhas = 'Adicione ao menos um insumo com quantidade'
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      showToast('⚠️ Preencha os campos obrigatórios corretamente')
+      return
+    }
+
+    const ingredientes = linhasValidas.map(l => {
+      let qtd = parseFloat(l.qtd)
+      if (l.unidade === 'g' || l.unidade === 'ml') {
+        qtd = qtd / 1000
+      }
+      return {
+        insumoId: parseInt(l.insumoId),
+        qtdPorUnidade: qtd
+      }
+    })
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/receitas/${ficha.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ custo: parseFloat(custo), ingredientes })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'falha ao salvar')
+      }
+      onClose()
+      showToast('✅ Ficha técnica atualizada com sucesso!')
+      onSucesso()
+    } catch (err) {
+      console.error(err)
+      showToast(`❌ Erro ao atualizar: ${err.message}`)
+    }
+  }
+
+  return (
+    <Modal title={`Editar Ficha — ${ficha.produtoNome}`} onClose={onClose}>
+      {carregando ? (
+        <p style={{ padding: 20, textAlign: 'center', color: 'var(--cinza)' }}>Carregando...</p>
+      ) : (
+        <>
+          <div className="form-group">
+            <label>Custo Estimado da Ficha (R$) *</label>
+            <input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={custo}
+              onChange={e => { setCusto(e.target.value); if (errors.custo) setErrors({ ...errors, custo: null }) }}
+              className={errors.custo ? 'input-error' : ''}
+            />
+            {errors.custo && <span className="form-error">{errors.custo}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Insumos da Ficha *</label>
+            <div style={s.linhasWrap}>
+              {linhas.map((l) => (
+                <div key={l.id} style={s.linhaInsumo}>
+                  <select
+                    value={l.insumoId}
+                    onChange={e => atualizarLinha(l.id, 'insumoId', e.target.value)}
+                    style={s.selectInsumo}
+                  >
+                    <option value="">Selecione o insumo...</option>
+                    {insumosData.map(ins => <option key={ins.id} value={ins.id}>{ins.nome}</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="Qtd."
+                    value={l.qtd}
+                    onChange={e => atualizarLinha(l.id, 'qtd', e.target.value)}
+                    style={s.inputQtd}
+                  />
+                  <select
+                    value={l.unidade}
+                    onChange={e => atualizarLinha(l.id, 'unidade', e.target.value)}
+                    style={s.selectUnidade}
+                  >
+                    {unidadeOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removerLinha(l.id)}
+                    style={s.btnRemover}
+                    title="Remover insumo"
+                    disabled={linhas.length === 1}
+                  >
+                    <IconTrash width={14} height={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            {errors.linhas && <span className="form-error">{errors.linhas}</span>}
+            <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={adicionarLinha}>
+              + Adicionar insumo
+            </button>
+          </div>
+
+          <div className="modal-actions">
+            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-primary" onClick={handleSalvar}>Salvar Alterações</button>
+          </div>
+        </>
+      )}
+    </Modal>
+  )
+}
+
 export default function Receitas() {
   const [modalNovaFicha, setModalNovaFicha] = useState(false)
   const [fichas, setFichas] = useState([])
+  const [fichaEditando, setFichaEditando] = useState(null)
 
   const carregarFichas = () => {
     fetch('http://localhost:3000/api/receitas')
@@ -224,11 +382,20 @@ export default function Receitas() {
             <p className="ficha-card-custo">
               Custo estimado: <strong>R$ {Number(f.custo).toFixed(2)}</strong>
             </p>
+            <button 
+              className="btn btn-secondary btn-sm"
+              style ={{ marginTop: 10 }}
+              onClick={() => setFichaEditando(f)}
+            >
+              Editar
+            </button>
+          
           </div>
         ))}
       </div>
 
       {modalNovaFicha && <ModalNovaFicha onClose={() => setModalNovaFicha(false)} onSucesso={carregarFichas} />}
+        {fichaEditando && (<ModalEditarFicha ficha={fichaEditando} onClose={() => setFichaEditando(null)} onSucesso={carregarFichas} />)}
     </div>
   )
 }
