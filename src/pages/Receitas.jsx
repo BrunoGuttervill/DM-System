@@ -10,8 +10,8 @@ function novaLinha() {
   return { id: proximoLinhaId++, insumoId: '', qtd: '', unidade: 'kg' }
 }
 
-function ModalNovaFicha({ onClose }) {
-  const { showToast } = useApp()
+function ModalNovaFicha({ onClose, onSucesso }) {
+  const { showToast, token } = useApp()
   const [custo, setCusto] = useState('')
   const [linhas, setLinhas] = useState([novaLinha(), novaLinha()])
   const [errors, setErrors] = useState({})
@@ -86,7 +86,7 @@ function ModalNovaFicha({ onClose }) {
     try {
       const res = await fetch('http://localhost:3000/api/receitas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           pizzaId: parseInt(pizzaId),
           custo: parseFloat(custo),
@@ -98,7 +98,8 @@ function ModalNovaFicha({ onClose }) {
         throw new Error(data.error || 'falha ao salvar')
       }
       onClose()
-      showToast(` Ficha técnica de ${pizzaId} criada com sucesso!`)
+      showToast(` Ficha técnica criada com sucesso!`)
+      onSucesso()
     } catch (err) {
       console.error(err)
       showToast(` Erro ao salvar ficha técnica: ${err.message}`)
@@ -192,7 +193,7 @@ function ModalNovaFicha({ onClose }) {
 }
 
 function ModalEditarFicha({ ficha, onClose, onSucesso }) {
-  const { showToast } = useApp()
+  const { showToast, token } = useApp()
   const [custo, setCusto] = useState(String(ficha.custo))
   const [linhas, setLinhas] = useState([])
   const [insumosData, setInsumosData] = useState([])
@@ -200,12 +201,11 @@ function ModalEditarFicha({ ficha, onClose, onSucesso }) {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    // busca a lista de insumos (pro select)
+    
     fetch('http://localhost:3000/api/insumos')
       .then(r => r.json())
       .then(data => setInsumosData(data))
 
-    // busca os itens ATUAIS desta ficha (pré-preenchimento)
     fetch(`http://localhost:3000/api/receitas/${ficha.pizzaId}`)
       .then(r => r.json())
       .then(data => {
@@ -257,7 +257,10 @@ function ModalEditarFicha({ ficha, onClose, onSucesso }) {
     try {
       const res = await fetch(`http://localhost:3000/api/receitas/${ficha.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json' ,
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ custo: parseFloat(custo), ingredientes })
       })
       if (!res.ok) {
