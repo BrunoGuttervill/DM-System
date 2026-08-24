@@ -81,7 +81,7 @@ function ModalProducao({ onClose, onSalvo }) {
 
 
 function ModalEditarProducao({ ordem, onClose, onSalvo }) {
-  const { showToast } = useApp()
+  const { showToast, token } = useApp()
   const [qtd, setQtd] = useState(ordem.qtd ?? '')
   const [responsavel, setResponsavel] = useState(ordem.responsavel || '')
   const [observacoes, setObservacoes] = useState(ordem.observacoes || '')
@@ -96,7 +96,10 @@ function ModalEditarProducao({ ordem, onClose, onSalvo }) {
     try {
       const res = await fetch(`http://localhost:3000/api/producao/${ordem.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ quantidade: parseInt(qtd), responsavel, observacoes }),
       })
       if (!res.ok) throw new Error('Falha ao salvar')
