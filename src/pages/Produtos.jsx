@@ -110,7 +110,10 @@ export default function Produtos() {
       .then(data => setProdutosData(data))
   }, [])
 
-  const filtrados = produtosData.filter(p => filtroStatus === 'todos' || p.status === filtroStatus)
+  const filtrados = produtosData.filter(p => {
+    if (p.status === 'inativo') return false
+    return filtroStatus === 'todos' || p.status === filtroStatus
+  })
 
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA))
 
@@ -126,7 +129,7 @@ export default function Produtos() {
   const paginados = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA)
 
   const stats = {
-    total: produtosData.length,
+    total: produtosData.filter(p => p.status !== 'inativo').length,
     ok: produtosData.filter(p => p.status === 'ok').length,
     baixo: produtosData.filter(p => p.status === 'baixo').length,
     critico: produtosData.filter(p => p.status === 'critico').length,
@@ -185,7 +188,7 @@ export default function Produtos() {
                   <td><strong>{p.qtd} un</strong></td>
                   <td>R$ {Number(p.precoVarejo).toFixed(2)}</td>
                   <td>R$ {Number(p.precoAtacado).toFixed(2)}</td>
-                  <td><span className={`tag tag-${p.status}`}>{p.status === 'ok' ? 'OK' : p.status === 'baixo' ? 'Baixo' : 'Crítico'}</span></td>
+                  <td><span className={`tag tag-${p.status}`}>{p.status === 'ok' ? 'OK' : p.status === 'baixo' ? 'Baixo' : p.status === 'critico' ? 'Crítico' : p.status}</span></td>
                 </tr>
               ))
             )}

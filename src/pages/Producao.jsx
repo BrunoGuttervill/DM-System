@@ -51,7 +51,9 @@ function ModalProducao({ onClose, onSalvo }) {
         <label>Produto Fabricado</label>
         <select value={pizzaId} onChange={e => setPizzaId(e.target.value)}>
           <option value="">Selecione um produto</option>
-          {pizzas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+          {pizzas
+            .filter(p => p.status === 'ok')
+            .map(p => <option key={p.id} value={p.id}>{p.nome} - {p.tipo}</option>)}
         </select>
       </div>
       <div className="form-row">

@@ -120,7 +120,9 @@ function ModalNovaFicha({ onClose, onSucesso }) {
           className={errors.produto ? 'input-error' : ''}
         >
           <option value="">Selecione o produto...</option>
-          {pizzas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+          {pizzas
+            .filter(p => p.status === 'ok')
+            .map(p => <option key={p.id} value={p.id}>{p.nome} - {p.tipo}</option>)}
         </select>
         {errors.produto && <span className="form-error">{errors.produto}</span>}
       </div>
