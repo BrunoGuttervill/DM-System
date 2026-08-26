@@ -248,6 +248,7 @@ export default function Insumos() {
             <tr>
               <th>Nome</th>
               <th>Categoria</th>
+              <th>Preço</th>
               <th>Qtd. Atual</th>
               <th>Qtd. Mínima</th>
               <th>Validade</th>
@@ -258,7 +259,7 @@ export default function Insumos() {
           <tbody>
             {filtrados.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
                   Nenhum insumo encontrado
                 </td>
               </tr>
@@ -267,6 +268,7 @@ export default function Insumos() {
                 <tr key={ins.id}>
                   <td><strong>{ins.nome}</strong></td>
                   <td>{ins.categoria}</td>
+                  <td>R$ {Number(ins.preco).toFixed(2)} / {ins.unidade}</td>
                   <td>{ins.qtdAtual} {ins.unidade}</td>
                   <td>{ins.qtdMin} {ins.unidade}</td>
                   <td>{formatarValidade(ins.validade)}</td>
