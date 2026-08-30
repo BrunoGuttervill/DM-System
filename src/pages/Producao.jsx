@@ -3,7 +3,7 @@ import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
 
 function ModalProducao({ onClose, onSalvo }) {
-  const { showToast, token } = useApp()
+  const { showToast, token, notifProducao } = useApp()
 
   const [qtd, setQtd] = useState('')
   const [responsavel, setResponsavel] = useState('')
@@ -12,6 +12,7 @@ function ModalProducao({ onClose, onSalvo }) {
   const [salvando, setSalvando] = useState(false)
   const [pizzas, setPizzas] = useState([])
   const [pizzaId, setPizzaId] = useState('')
+  const [confirmando, setConfirmando] = useState(false)
 
   useEffect(() => {
     fetch('http://localhost:3000/api/produtos')
@@ -19,11 +20,9 @@ function ModalProducao({ onClose, onSalvo }) {
       .then(data => setPizzas(data))
   }, [])
 
-  const salvar = async () => {
-    if (!pizzaId) { setErro('Selecione um produto'); return }
-    if (!qtd || parseInt(qtd) < 1) { setErro('Informe uma quantidade válida'); return }
-    if (!responsavel.trim()) { setErro('Informe o responsável'); return }
-    setErro('')
+  const produtoSelecionado = pizzas.find(p => String(p.id) === String(pizzaId))
+
+  const enviar = async () => {
     setSalvando(true)
     try {
       const res = await fetch('http://localhost:3000/api/producao', {
@@ -40,9 +39,54 @@ function ModalProducao({ onClose, onSalvo }) {
       await onSalvo()
     } catch (err) {
       showToast('❌ Não foi possível registrar. Tente novamente.')
+      setConfirmando(false)
     } finally {
       setSalvando(false)
     }
+  }
+
+  const handleRegistrarClick = () => {
+    if (!pizzaId) { setErro('Selecione um produto'); return }
+    if (!qtd || parseInt(qtd) < 1) { setErro('Informe uma quantidade válida'); return }
+    if (!responsavel.trim()) { setErro('Informe o responsável'); return }
+    setErro('')
+
+    if (notifProducao) {
+      setConfirmando(true)
+      return
+    }
+    enviar()
+  }
+
+  if (confirmando) {
+    return (
+      <Modal title="Confirmar produção" onClose={onClose}>
+        <p style={{ fontSize: '0.9rem', color: 'var(--texto)', lineHeight: 1.6, marginBottom: 8 }}>
+          Confirma o registro desta produção?
+        </p>
+        <div style={{
+          background: 'var(--bg-hover)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+          padding: '14px 16px',
+          fontSize: '0.86rem',
+          color: 'var(--texto)',
+          marginBottom: 8,
+          lineHeight: 1.7,
+        }}>
+          <strong>{produtoSelecionado ? `${produtoSelecionado.nome} - ${produtoSelecionado.tipo}` : 'Produto selecionado'}</strong><br />
+          Quantidade: <strong>{qtd} un</strong><br />
+          Responsável: <strong>{responsavel}</strong>
+          {observacoes && <><br />Observações: {observacoes}</>}
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={() => setConfirmando(false)} disabled={salvando}>Voltar</button>
+          <button className="btn btn-terra" onClick={enviar} disabled={salvando}>
+            {salvando ? 'Registrando...' : 'Sim, registrar'}
+          </button>
+        </div>
+      </Modal>
+    )
   }
 
   return (
@@ -73,7 +117,7 @@ function ModalProducao({ onClose, onSalvo }) {
       {erro && <span className="form-error">{erro}</span>}
       <div className="modal-actions">
         <button className="btn btn-secondary" onClick={onClose} disabled={salvando}>Cancelar</button>
-        <button className="btn btn-terra" onClick={salvar} disabled={salvando}>
+        <button className="btn btn-terra" onClick={handleRegistrarClick} disabled={salvando}>
           {salvando ? 'Registrando...' : 'Registrar'}
         </button>
       </div>
@@ -161,7 +205,6 @@ export default function Producao() {
 
   const totalPaginas = Math.max(1, Math.ceil(ordensData.length / ITENS_POR_PAGINA))
 
-  // Se a página atual ficar fora do intervalo (ex: excluiu o último item da última página), volta pra última válida
   useEffect(() => {
     if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
   }, [totalPaginas, paginaAtual])
