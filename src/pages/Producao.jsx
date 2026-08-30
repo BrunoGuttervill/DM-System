@@ -189,6 +189,115 @@ function ModalEditarProducao({ ordem, onClose, onSalvo }) {
   )
 }
 
+function ModalProduzirInsumo({ onClose, onSalvo }) {
+  const { showToast, token } = useApp()
+
+  const [insumos, setInsumos] = useState([])
+  const [insumoId, setInsumoId] = useState('')
+  const [lotes, setLotes] = useState('')
+  const [responsavel, setResponsavel] = useState('')
+  const [observacoes, setObservacoes] = useState('')
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/insumos/produziveis')
+      .then(r => r.json())
+      .then(data => setInsumos(data))
+  }, [])
+
+  const insumoSelecionado = insumos.find(i => String(i.id) === String(insumoId))
+
+  const enviar = async () => {
+    setSalvando(true)
+    try {
+      const res = await fetch('http://localhost:3000/api/producao/insumo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          insumoId,
+          quantidadeLotes: parseInt(lotes),
+          responsavel,
+          observacoes
+        }),
+      })
+      if (!res.ok) throw new Error('Falha ao salvar')
+      onClose()
+      showToast('✅ Produção registrada! Massa adicionada ao estoque.')
+      await onSalvo()
+    } catch (err) {
+      showToast('❌ Não foi possível registrar. Tente novamente.')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  const handleRegistrarClick = () => {
+    if (!insumoId) { setErro('Selecione o que produzir'); return }
+    if (!lotes || parseInt(lotes) < 1) { setErro('Informe a quantidade de lotes'); return }
+    if (!responsavel.trim()) { setErro('Informe o responsável'); return }
+    setErro('')
+    enviar()
+  }
+
+  return (
+    <Modal title="Produzir Insumo" onClose={onClose}>
+      <div className="form-group">
+        <label>O que produzir</label>
+        <select value={insumoId} onChange={e => setInsumoId(e.target.value)}>
+          <option value="">Selecione um insumo</option>
+          {insumos.map(i => (
+            <option key={i.id} value={i.id}>{i.nome}</option>
+          ))}
+        </select>
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label>Quantidade de Lotes</label>
+          <input type="number" placeholder="0" min="1" value={lotes} onChange={e => setLotes(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Responsável</label>
+          <input type="text" placeholder="Nome do operador" value={responsavel} onChange={e => setResponsavel(e.target.value)} />
+        </div>
+      </div>
+
+      {insumoSelecionado && lotes > 0 && (
+        <div style={{
+          background: 'var(--bg-hover)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+          padding: '10px 14px',
+          fontSize: '0.86rem',
+          color: 'var(--texto)',
+          marginBottom: 8,
+        }}>
+          Isso vai produzir <strong>{lotes * insumoSelecionado.rendimento} {insumoSelecionado.unidade}</strong> de {insumoSelecionado.nome}
+          <br />
+          <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>
+            ({lotes} {lotes == 1 ? 'lote' : 'lotes'} × {insumoSelecionado.rendimento} por lote)
+          </span>
+        </div>
+      )}
+
+      <div className="form-group">
+        <label>Observações</label>
+        <textarea rows="2" placeholder="Alguma observação sobre esse lote..." value={observacoes} onChange={e => setObservacoes(e.target.value)} />
+      </div>
+      {erro && <span className="form-error">{erro}</span>}
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose} disabled={salvando}>Cancelar</button>
+        <button className="btn btn-terra" onClick={handleRegistrarClick} disabled={salvando}>
+          {salvando ? 'Produzindo...' : 'Produzir'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 const NOMES_MESES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
@@ -273,6 +382,7 @@ function gerarPdfPeriodo(ordens, tituloPeriodo, nomeArquivo) {
 
 export default function Producao() {
   const [modalAberto, setModalAberto] = useState(false)
+  const [modalInsumoAberto, setModalInsumoAberto] = useState(false)
   const [ordemEditando, setOrdemEditando] = useState(null)
   const [ordensData, setOrdensData] = useState([])
   const [paginaAtual, setPaginaAtual] = useState(1)
@@ -385,6 +495,9 @@ export default function Producao() {
               onChange={e => setBusca(e.target.value)}
             />
           </div>
+          <button className="btn btn-secondary" onClick={() => setModalInsumoAberto(true)}>
+            Produzir Insumo
+          </button>
           <button className="btn btn-terra" onClick={() => setModalAberto(true)}>
             Registrar Produção
           </button>
@@ -517,6 +630,9 @@ export default function Producao() {
 
       {modalAberto && (
         <ModalProducao onClose={() => setModalAberto(false)} onSalvo={carregarOrdens} />
+      )}
+      {modalInsumoAberto && (
+        <ModalProduzirInsumo onClose={() => setModalInsumoAberto(false)} onSalvo={carregarOrdens} />
       )}
       {ordemEditando && (
         <ModalEditarProducao
