@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import * as XLSX from 'xlsx'
 import { useTheme } from '../context/ThemeContext'
 import { useApp } from '../context/AppContext'
 import Modal from '../components/Modal'
@@ -185,6 +186,7 @@ export default function Configuracoes({ onLogout }) {
   const [sobrenome, setSobrenome] = useState(restoInicial.join(' '))
   const [emailCampo, setEmailCampo] = useState(usuario?.email || 'dany@massas.com')
   const [salvandoPerfil, setSalvandoPerfil] = useState(false)
+  const [exportando, setExportando] = useState(false)
 
   const inicialAvatar = (usuario?.nome || 'D').trim().charAt(0).toUpperCase()
   const fotoExibida = fotoPerfil || (usuario?.fotoUrl ? `http://localhost:3000${usuario.fotoUrl}` : null)
@@ -232,6 +234,76 @@ export default function Configuracoes({ onLogout }) {
       showToast('✅ Foto de perfil atualizada!')
     } catch (err) {
       showToast('❌ Não foi possível conectar ao servidor.')
+    }
+  }
+
+  const exportarDados = async () => {
+    setExportando(true)
+    try {
+      const [insumosRes, produtosRes, fornecedoresRes, producaoRes] = await Promise.all([
+        fetch('http://localhost:3000/api/insumos'),
+        fetch('http://localhost:3000/api/produtos'),
+        fetch('http://localhost:3000/api/fornecedor'),
+        fetch('http://localhost:3000/api/producao'),
+      ])
+
+      const [insumos, produtos, fornecedores, producao] = await Promise.all([
+        insumosRes.json(),
+        produtosRes.json(),
+        fornecedoresRes.json(),
+        producaoRes.json(),
+      ])
+
+      const wb = XLSX.utils.book_new()
+
+      const abaInsumos = insumos.map(i => ({
+        Nome: i.nome,
+        Categoria: i.categoria,
+        'Qtd. Atual': i.qtdAtual,
+        'Qtd. Mínima': i.qtdMin,
+        Unidade: i.unidade,
+        Validade: i.validade,
+        Status: i.status === 'ok' ? 'OK' : i.status === 'baixo' ? 'Baixo' : 'Crítico',
+      }))
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(abaInsumos), 'Matérias-primas')
+
+      const abaProdutos = produtos.map(p => ({
+        Nome: p.nome,
+        Tipo: p.tipo,
+        Sabores: Array.isArray(p.sabores) ? p.sabores.join(', ') : p.sabores,
+        Quantidade: p.qtd,
+        'Preço Varejo': p.precoVarejo,
+        'Preço Atacado': p.precoAtacado,
+        Status: p.status === 'ok' ? 'OK' : p.status === 'baixo' ? 'Baixo' : 'Crítico',
+      }))
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(abaProdutos), 'Produtos Acabados')
+
+      const abaFornecedores = fornecedores.map(f => ({
+        Nome: f.nome,
+        CNPJ: f.cnpj,
+        Telefone: f.telefone,
+        'E-mail': f.email,
+        'Insumos Fornecidos': f.insumos,
+      }))
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(abaFornecedores), 'Fornecedores')
+
+      const abaProducao = producao.map(o => ({
+        'Data/Hora': o.data,
+        Produto: o.produto,
+        Quantidade: o.qtd,
+        Responsável: o.responsavel,
+        'Insumos Consumidos': o.insumos,
+      }))
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(abaProducao), 'Ordens de Produção')
+
+      const hoje = new Date().toISOString().slice(0, 10)
+      XLSX.writeFile(wb, `massastock-dados-${hoje}.xlsx`)
+
+      showToast('✅ Dados exportados com sucesso!')
+    } catch (err) {
+      showToast('❌ Não foi possível exportar os dados. Verifique se o backend está rodando.')
+    } finally {
+      setExportando(false)
     }
   }
 
@@ -366,8 +438,8 @@ export default function Configuracoes({ onLogout }) {
       {}
       <Secao titulo="Sistema">
         <Linha icone={<IconBox width={18} height={18} />} label="Exportar dados" descricao="Baixe todo o estoque em CSV/Excel">
-          <button className="btn btn-secondary btn-sm" onClick={() => showToast('📥 Exportando...')}>
-            Exportar
+          <button className="btn btn-secondary btn-sm" onClick={exportarDados} disabled={exportando}>
+            {exportando ? 'Exportando...' : 'Exportar'}
           </button>
         </Linha>
         <div style={s.divisor} />
