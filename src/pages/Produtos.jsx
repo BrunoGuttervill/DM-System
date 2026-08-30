@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { IconCheck, IconAlertTriangle, IconAlertCircle } from '../components/Icons'
+import { IconCheck, IconAlertTriangle, IconAlertCircle, IconSearch } from '../components/Icons'
 
 const tipoProdutoOptions = ['Pizza', 'Lasanha', 'Massa', 'Salgado', 'Molho', 'Bolacha']
 
@@ -100,6 +100,8 @@ export default function Produtos() {
   const { showToast } = useApp()
   const [modalNovo, setModalNovo] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState('todos')
+  const [busca, setBusca] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState('todos')
   const [produtosData, setProdutosData] = useState([])
   const [paginaAtual, setPaginaAtual] = useState(1)
   const ITENS_POR_PAGINA = 10
@@ -110,16 +112,27 @@ export default function Produtos() {
       .then(data => setProdutosData(data))
   }, [])
 
+  const tiposUnicos = [...new Set(
+    produtosData.filter(p => p.status !== 'inativo').map(p => p.tipo)
+  )].filter(Boolean).sort()
+
   const filtrados = produtosData.filter(p => {
     if (p.status === 'inativo') return false
-    return filtroStatus === 'todos' || p.status === filtroStatus
+    const matchStatus = filtroStatus === 'todos' || p.status === filtroStatus
+    const matchTipo = filtroTipo === 'todos' || p.tipo === filtroTipo
+    const termo = busca.toLowerCase()
+    const matchBusca = !termo ||
+      p.nome.toLowerCase().includes(termo) ||
+      p.tipo.toLowerCase().includes(termo) ||
+      (Array.isArray(p.sabores) ? p.sabores.join(', ') : (p.sabores || '')).toLowerCase().includes(termo)
+    return matchStatus && matchTipo && matchBusca
   })
 
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA))
 
   useEffect(() => {
     setPaginaAtual(1)
-  }, [filtroStatus])
+  }, [filtroStatus, filtroTipo, busca])
 
   useEffect(() => {
     if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
@@ -128,20 +141,47 @@ export default function Produtos() {
   const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
   const paginados = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA)
 
+  const baseFiltrada = produtosData.filter(p => {
+    if (p.status === 'inativo') return false
+    const matchTipo = filtroTipo === 'todos' || p.tipo === filtroTipo
+    const termo = busca.toLowerCase()
+    const matchBusca = !termo ||
+      p.nome.toLowerCase().includes(termo) ||
+      p.tipo.toLowerCase().includes(termo) ||
+      (Array.isArray(p.sabores) ? p.sabores.join(', ') : (p.sabores || '')).toLowerCase().includes(termo)
+    return matchTipo && matchBusca
+  })
+
   const stats = {
-    total: produtosData.filter(p => p.status !== 'inativo').length,
-    ok: produtosData.filter(p => p.status === 'ok').length,
-    baixo: produtosData.filter(p => p.status === 'baixo').length,
-    critico: produtosData.filter(p => p.status === 'critico').length,
+    total: baseFiltrada.length,
+    ok: baseFiltrada.filter(p => p.status === 'ok').length,
+    baixo: baseFiltrada.filter(p => p.status === 'baixo').length,
+    critico: baseFiltrada.filter(p => p.status === 'critico').length,
   }
 
   return (
     <div className="page-fade">
       <div className="sec-header">
         <h3 className="sec-title">Produtos Acabados</h3>
-        <button className="btn btn-primary" onClick={() => setModalNovo(true)}>
-          + Novo Produto
-        </button>
+        <div className="sec-actions">
+          <div className="search-wrap">
+            <IconSearch className="search-icon" width={15} height={15} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar produto..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+            />
+          </div>
+          <select className="filter-select" value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
+            <option value="todos">Todas as categorias</option>
+            {tiposUnicos.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <button className="btn btn-primary" onClick={() => setModalNovo(true)}>
+            + Novo Produto
+          </button>
+        </div>
       </div>
 
       <div className="stat-cards">
