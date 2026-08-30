@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { IconTrash } from '../components/Icons'
+import { IconTrash, IconSearch } from '../components/Icons'
 
 function useFormFornecedor(inicial) {
   const [formData, setFormData] = useState(inicial)
@@ -239,6 +239,7 @@ export default function Fornecedores() {
   const [fornecedorEditando, setFornecedorEditando] = useState(null)
   const [fornecedorExcluindo, setFornecedorExcluindo] = useState(null)
   const [fornData, setFornData] = useState([])
+  const [busca, setBusca] = useState('')
   const [paginaAtual, setPaginaAtual] = useState(1)
   const ITENS_POR_PAGINA = 10
 
@@ -252,22 +253,46 @@ export default function Fornecedores() {
     carregarFornecedores()
   }, [])
 
-  const totalPaginas = Math.max(1, Math.ceil(fornData.length / ITENS_POR_PAGINA))
+  const termo = busca.toLowerCase()
+  const fornFiltrados = fornData.filter(f =>
+    !termo ||
+    f.nome.toLowerCase().includes(termo) ||
+    (f.cnpj || '').toLowerCase().includes(termo) ||
+    (f.insumos || '').toLowerCase().includes(termo)
+  )
+
+  const totalPaginas = Math.max(1, Math.ceil(fornFiltrados.length / ITENS_POR_PAGINA))
 
   useEffect(() => {
     if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
   }, [totalPaginas, paginaAtual])
 
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
+
   const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
-  const fornPaginados = fornData.slice(inicio, inicio + ITENS_POR_PAGINA)
+  const fornPaginados = fornFiltrados.slice(inicio, inicio + ITENS_POR_PAGINA)
 
   return (
     <div className="page-fade">
       <div className="sec-header">
         <h3 className="sec-title">Fornecedores</h3>
-        <button className="btn btn-primary" onClick={() => setModalAberto(true)}>
-          + Novo Fornecedor
-        </button>
+        <div className="sec-actions">
+          <div className="search-wrap">
+            <IconSearch className="search-icon" width={15} height={15} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar fornecedor..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={() => setModalAberto(true)}>
+            + Novo Fornecedor
+          </button>
+        </div>
       </div>
 
       <div className="table-wrap">
@@ -282,10 +307,10 @@ export default function Fornecedores() {
             </tr>
           </thead>
           <tbody>
-            {fornData.length === 0 ? (
+            {fornFiltrados.length === 0 ? (
               <tr>
                 <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
-                  Nenhum fornecedor cadastrado
+                  {fornData.length === 0 ? 'Nenhum fornecedor cadastrado' : 'Nenhum fornecedor encontrado'}
                 </td>
               </tr>
             ) : (
@@ -320,10 +345,10 @@ export default function Fornecedores() {
         </table>
       </div>
 
-      {fornData.length > 0 && (
+      {fornFiltrados.length > 0 && (
         <div className="pagination">
           <span className="pagination-info">
-            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, fornData.length)} de {fornData.length}
+            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, fornFiltrados.length)} de {fornFiltrados.length}
           </span>
           <div className="pagination-btns">
             <button
