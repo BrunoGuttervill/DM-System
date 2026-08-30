@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
+import { IconSearch } from '../components/Icons'
 
 function ModalProducao({ onClose, onSalvo }) {
   const { showToast, token, notifProducao } = useApp()
@@ -191,6 +192,7 @@ export default function Producao() {
   const [ordemEditando, setOrdemEditando] = useState(null)
   const [ordensData, setOrdensData] = useState([])
   const [paginaAtual, setPaginaAtual] = useState(1)
+  const [busca, setBusca] = useState('')
   const ITENS_POR_PAGINA = 10
 
   const carregarOrdens = async () => {
@@ -203,22 +205,48 @@ export default function Producao() {
     carregarOrdens()
   }, [])
 
-  const totalPaginas = Math.max(1, Math.ceil(ordensData.length / ITENS_POR_PAGINA))
+  const termo = busca.toLowerCase()
+  const ordensFiltradas = ordensData.filter(o =>
+    !termo ||
+    o.produto.toLowerCase().includes(termo) ||
+    o.responsavel.toLowerCase().includes(termo) ||
+    (o.insumos || '').toLowerCase().includes(termo)
+  )
+
+  const totalPaginas = Math.max(1, Math.ceil(ordensFiltradas.length / ITENS_POR_PAGINA))
 
   useEffect(() => {
     if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
   }, [totalPaginas, paginaAtual])
 
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
+
+  const ordensOrdenadas = [...ordensFiltradas].sort((a, b) => new Date(b.data) - new Date(a.data))
+
   const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
-  const ordensPaginadas = ordensData.slice(inicio, inicio + ITENS_POR_PAGINA)
+  const ordensPaginadas = ordensOrdenadas.slice(inicio, inicio + ITENS_POR_PAGINA)
 
   return (
     <div className="page-fade">
       <div className="sec-header">
         <h3 className="sec-title">Ordens de Produção</h3>
-        <button className="btn btn-terra" onClick={() => setModalAberto(true)}>
-          Registrar Produção
-        </button>
+        <div className="sec-actions">
+          <div className="search-wrap">
+            <IconSearch className="search-icon" width={15} height={15} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar produção..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-terra" onClick={() => setModalAberto(true)}>
+            Registrar Produção
+          </button>
+        </div>
       </div>
 
       <div className="table-wrap">
@@ -234,10 +262,10 @@ export default function Producao() {
             </tr>
           </thead>
           <tbody>
-            {ordensData.length === 0 ? (
+            {ordensFiltradas.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
-                  Nenhuma produção registrada
+                  {ordensData.length === 0 ? 'Nenhuma produção registrada' : 'Nenhuma produção encontrada'}
                 </td>
               </tr>
             ) : (
@@ -260,10 +288,10 @@ export default function Producao() {
         </table>
       </div>
 
-      {ordensData.length > 0 && (
+      {ordensFiltradas.length > 0 && (
         <div className="pagination">
           <span className="pagination-info">
-            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, ordensData.length)} de {ordensData.length}
+            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, ordensFiltradas.length)} de {ordensFiltradas.length}
           </span>
           <div className="pagination-btns">
             <button
