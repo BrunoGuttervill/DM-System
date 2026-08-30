@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { fornecedorOptions, categoriaOptions } from '../data/mockData'
 import { IconSearch } from '../components/Icons'
 
 function ModalMovimentacao({ insumo, onClose }) {
@@ -43,7 +42,7 @@ function ModalMovimentacao({ insumo, onClose }) {
   )
 }
 
-function ModalNovoInsumo({ onClose, onCriado }) {
+function ModalNovoInsumo({ onClose, onCriado, categoriasSugeridas, fornecedores }) {
   const { showToast } = useApp()
   const [formData, setFormData] = useState({
     nome: '',
@@ -60,7 +59,7 @@ function ModalNovoInsumo({ onClose, onCriado }) {
   const validate = () => {
     const newErrors = {}
     if (!formData.nome.trim()) newErrors.nome = 'Nome obrigatório'
-    if (!formData.categoria) newErrors.categoria = 'Selecione uma categoria'
+    if (!formData.categoria.trim()) newErrors.categoria = 'Categoria obrigatória'
     if (!formData.qtdAtual || parseFloat(formData.qtdAtual) < 0) newErrors.qtdAtual = 'Quantidade inválida'
     if (!formData.qtdMin || parseFloat(formData.qtdMin) < 0) newErrors.qtdMin = 'Mínimo inválido'
     if (!formData.validade) newErrors.validade = 'Validade obrigatória'
@@ -95,7 +94,7 @@ function ModalNovoInsumo({ onClose, onCriado }) {
 
       onClose()
       showToast(`✅ ${formData.nome} cadastrado com sucesso!`)
-      await onCriado() // recarrega a lista da tela
+      await onCriado()
     } catch (err) {
       showToast('❌ Não foi possível salvar o insumo. Tente novamente.')
     } finally {
@@ -118,17 +117,24 @@ function ModalNovoInsumo({ onClose, onCriado }) {
       <div className="form-row">
         <div className="form-group">
           <label>Categoria *</label>
-          <select value={formData.categoria} onChange={e => handleChange('categoria', e.target.value)} className={errors.categoria ? 'input-error' : ''}>
-            <option value="">Selecione...</option>
-            {categoriaOptions.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <input
+            type="text"
+            list="categoria-options"
+            placeholder="Ex: Laticínios"
+            value={formData.categoria}
+            onChange={e => handleChange('categoria', e.target.value)}
+            className={errors.categoria ? 'input-error' : ''}
+          />
+          <datalist id="categoria-options">
+            {categoriasSugeridas.map(c => <option key={c} value={c} />)}
+          </datalist>
           {errors.categoria && <span className="form-error">{errors.categoria}</span>}
         </div>
         <div className="form-group">
           <label>Fornecedor Principal</label>
           <select value={formData.fornecedor} onChange={e => handleChange('fornecedor', e.target.value)}>
             <option value="">Selecione...</option>
-            {fornecedorOptions.map(f => <option key={f} value={f}>{f}</option>)}
+            {fornecedores.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
           </select>
         </div>
       </div>
@@ -174,6 +180,7 @@ export default function Insumos() {
   const [modalNovo, setModalNovo] = useState(false)
   const [movInsumo, setMovInsumo] = useState(null)
   const [insumosData, setInsumosData] = useState([])
+  const [fornecedores, setFornecedores] = useState([])
   const [paginaAtual, setPaginaAtual] = useState(1)
   const ITENS_POR_PAGINA = 10
 
@@ -185,10 +192,11 @@ export default function Insumos() {
 
   useEffect(() => {
     carregarInsumos()
+    fetch('http://localhost:3000/api/fornecedor').then(r => r.json()).then(setFornecedores)
   }, [])
 
   const categoriasUnicas = useMemo(() => {
-    return [...new Set(insumosData.map(i => i.categoria))].sort()
+    return [...new Set(insumosData.map(i => i.categoria))].filter(Boolean).sort()
   }, [insumosData])
 
   const filtrados = insumosData.filter(i => {
@@ -248,7 +256,6 @@ export default function Insumos() {
             <tr>
               <th>Nome</th>
               <th>Categoria</th>
-              <th>Preço</th>
               <th>Qtd. Atual</th>
               <th>Qtd. Mínima</th>
               <th>Validade</th>
@@ -259,7 +266,7 @@ export default function Insumos() {
           <tbody>
             {filtrados.length === 0 ? (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
                   Nenhum insumo encontrado
                 </td>
               </tr>
@@ -268,7 +275,6 @@ export default function Insumos() {
                 <tr key={ins.id}>
                   <td><strong>{ins.nome}</strong></td>
                   <td>{ins.categoria}</td>
-                  <td>R$ {Number(ins.preco).toFixed(2)} / {ins.unidade}</td>
                   <td>{ins.qtdAtual} {ins.unidade}</td>
                   <td>{ins.qtdMin} {ins.unidade}</td>
                   <td>{formatarValidade(ins.validade)}</td>
@@ -318,7 +324,14 @@ export default function Insumos() {
         </div>
       )}
 
-      {modalNovo && <ModalNovoInsumo onClose={() => setModalNovo(false)} onCriado={carregarInsumos} />}
+      {modalNovo && (
+        <ModalNovoInsumo
+          onClose={() => setModalNovo(false)}
+          onCriado={carregarInsumos}
+          categoriasSugeridas={categoriasUnicas}
+          fornecedores={fornecedores}
+        />
+      )}
       {movInsumo && <ModalMovimentacao insumo={movInsumo} onClose={() => setMovInsumo(null)} />}
     </div>
   )
