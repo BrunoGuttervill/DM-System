@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { IconTrash, IconClipboard } from '../components/Icons'
+import { IconTrash, IconClipboard, IconSearch } from '../components/Icons'
 
 const unidadeFallback = ['kg', 'g', 'litros', 'ml', 'unidade']
 
@@ -206,6 +206,11 @@ export default function Receitas() {
   const [insumos, setInsumos] = useState([])
   const [fichaDetalhe, setFichaDetalhe] = useState(null)
   const [modalForm, setModalForm] = useState(null) // { modo: 'criar' | 'editar', fichaExistente?, ingredientesExistentes? }
+  const [busca, setBusca] = useState('')
+
+  const fichasFiltradas = fichas.filter(f =>
+    f.produtoNome.toLowerCase().includes(busca.toLowerCase())
+  )
 
   const carregarFichas = async () => {
     const res = await fetch('http://localhost:3000/api/receitas')
@@ -228,18 +233,30 @@ export default function Receitas() {
     <div className="page-fade">
       <div className="sec-header">
         <h3 className="sec-title">Fichas Técnicas</h3>
-        <button className="btn btn-primary" onClick={() => setModalForm({ modo: 'criar' })}>
-          + Nova Ficha
-        </button>
+        <div className="sec-actions">
+          <div className="search-wrap">
+            <IconSearch className="search-icon" width={15} height={15} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar ficha técnica..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={() => setModalForm({ modo: 'criar' })}>
+            + Nova Ficha
+          </button>
+        </div>
       </div>
 
-      {fichas.length === 0 ? (
+      {fichasFiltradas.length === 0 ? (
         <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--cinza)' }}>
-          Nenhuma ficha técnica cadastrada ainda.
+          {fichas.length === 0 ? 'Nenhuma ficha técnica cadastrada ainda.' : 'Nenhuma ficha encontrada.'}
         </div>
       ) : (
         <div className="prod-cards">
-          {fichas.map(f => (
+          {fichasFiltradas.map(f => (
             <div key={f.id} className="prod-card" onClick={() => setFichaDetalhe(f)}>
               <div className="prod-card-icon"><IconClipboard width={22} height={22} /></div>
               <h4>{f.produtoNome}</h4>
