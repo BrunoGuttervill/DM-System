@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login.jsx'
+import ResetSenha from './pages/ResetSenha.jsx'
 import { AppProvider } from './context/AppContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 
@@ -10,6 +11,9 @@ function Root() {
   const [logado, setLogado] = useState(false)
   const [usuario, setUsuario] = useState(null)
   const [token, setToken] = useState(null)
+
+  const params = new URLSearchParams(window.location.search)
+  const tokenReset = params.get('token')
 
   const handleLogin = (dados) => {
     setToken(dados.token)
@@ -21,6 +25,15 @@ function Root() {
     setLogado(false)
     setUsuario(null)
     setToken(null)
+  }
+
+  // Link de "esqueci minha senha" cai aqui, mesmo sem estar logado
+  if (tokenReset) {
+    return (
+      <ThemeProvider>
+        <ResetSenha token={tokenReset} />
+      </ThemeProvider>
+    )
   }
 
   if (!logado) {

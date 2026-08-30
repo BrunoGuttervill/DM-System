@@ -122,12 +122,29 @@ export default function Login({ onLogin }) {
     }
   }
 
-  const handleRecuperar = (e) => {
+  const handleRecuperar = async (e) => {
     e.preventDefault()
     setErro('')
     if (!email) { setErro('Digite seu e-mail.'); return }
     setCarregando(true)
-    setTimeout(() => { setCarregando(false); setModo('confirmacao') }, 1200)
+    try {
+      const res = await fetch('http://localhost:3000/api/usuario/esqueci-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const dados = await res.json()
+      setCarregando(false)
+
+      if (!res.ok) {
+        setErro(dados.error || 'Não foi possível enviar o e-mail. Tente novamente.')
+        return
+      }
+      setModo('confirmacao')
+    } catch (err) {
+      setCarregando(false)
+      setErro('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
+    }
   }
 
   const handleContaCriada = (emailCriado) => {
@@ -860,31 +877,6 @@ const s = {
     textAlign: 'center',
     textDecoration: 'none',
     letterSpacing: '0.1px',
-  },
-
-  demoBox: {
-    marginTop: 20,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    padding: '12px 16px',
-    background: '#FEFBF5',
-    border: '1px dashed #D4AA78',
-    borderRadius: 10,
-    textAlign: 'center',
-  },
-  demoLabel: {
-    fontSize: '0.68rem',
-    fontWeight: 700,
-    letterSpacing: '1.5px',
-    textTransform: 'uppercase',
-    color: '#B09070',
-  },
-  demoVal: {
-    fontSize: '0.82rem',
-    color: '#5A3A25',
-    fontWeight: 500,
-    fontFamily: "'DM Mono', 'Courier New', monospace",
   },
 
   criarContaTxt: {
