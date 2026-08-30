@@ -1,33 +1,79 @@
 import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
-import { IconTrash } from '../components/Icons'
+import { IconTrash, IconClipboard } from '../components/Icons'
 
-const unidadeOptions = ['kg', 'g', 'litros', 'ml', 'unidade']
+const unidadeFallback = ['kg', 'g', 'litros', 'ml', 'unidade']
 
 let proximoLinhaId = 1
 function novaLinha() {
-  return { id: proximoLinhaId++, insumoId: '', qtd: '', unidade: 'kg' }
+  return { id: proximoLinhaId++, insumoId: '', qtdPorUnidade: '' }
 }
 
-function ModalNovaFicha({ onClose, onSucesso }) {
-  const { showToast, token } = useApp()
-  const [custo, setCusto] = useState('')
-  const [linhas, setLinhas] = useState([novaLinha(), novaLinha()])
-  const [errors, setErrors] = useState({})
-  const [pizzas, setPizzas] = useState([])
-  const [insumosData, setInsumosData] = useState([])
-  const [pizzaId, setPizzaId] = useState('');
+function ModalDetalheFicha({ ficha, onClose, onEditar }) {
+  const [ingredientes, setIngredientes] = useState(null)
+  const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/produtos')
+    fetch(`http://localhost:3000/api/receitas/${ficha.pizzaId}`)
       .then(r => r.json())
-      .then(data => setPizzas(data))
+      .then(data => setIngredientes(data))
+      .finally(() => setCarregando(false))
+  }, [ficha.pizzaId])
 
-    fetch('http://localhost:3000/api/insumos')
-      .then(r => r.json())
-      .then(data => setInsumosData(data))
-  }, []);
+  return (
+    <Modal title={`Ficha Técnica — ${ficha.produtoNome}`} onClose={onClose}>
+      <p style={{ fontSize: '0.85rem', color: 'var(--cinza)', marginBottom: 14 }}>
+        Custo estimado: <strong style={{ color: 'var(--escuro)' }}>R$ {Number(ficha.custo).toFixed(2)}</strong>
+        {' · '}{ficha.totalInsumos} insumo{ficha.totalInsumos === 1 ? '' : 's'}
+      </p>
+
+      {carregando ? (
+        <p style={{ color: 'var(--cinza)', fontSize: '0.85rem' }}>Carregando ingredientes...</p>
+      ) : ingredientes.length === 0 ? (
+        <p style={{ color: 'var(--cinza)', fontSize: '0.85rem' }}>Nenhum insumo cadastrado nessa ficha.</p>
+      ) : (
+        <div className="table-wrap" style={{ marginBottom: 0 }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>Quantidade por unidade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ingredientes.map(ing => (
+                <tr key={ing.id}>
+                  <td><strong>{ing.nome}</strong></td>
+                  <td>{ing.qtdPorUnidade} {ing.unidade}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose}>Fechar</button>
+        <button className="btn btn-primary" onClick={() => onEditar(ficha, ingredientes)} disabled={carregando}>
+          Editar ficha
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
+function ModalFormFicha({ modo, fichaExistente, ingredientesExistentes, produtos, insumos, onClose, onSalvo }) {
+  const { showToast, token } = useApp()
+  const [pizzaId, setPizzaId] = useState(fichaExistente?.pizzaId || '')
+  const [custo, setCusto] = useState(fichaExistente?.custo ?? '')
+  const [linhas, setLinhas] = useState(
+    ingredientesExistentes?.length
+      ? ingredientesExistentes.map(i => ({ id: proximoLinhaId++, insumoId: String(i.insumoId), qtdPorUnidade: String(i.qtdPorUnidade) }))
+      : [novaLinha(), novaLinha()]
+  )
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
 
   const atualizarLinha = (id, campo, valor) => {
     setLinhas(linhas.map(l => l.id === id ? { ...l, [campo]: valor } : l))
@@ -40,104 +86,68 @@ function ModalNovaFicha({ onClose, onSucesso }) {
     setLinhas(linhas.filter(l => l.id !== id))
   }
 
-  const validate = () => {
-    const newErrors = {}
-    if (!pizzaId) newErrors.produto = 'Selecione um produto'
-    if (!custo || parseFloat(custo) <= 0) newErrors.custo = 'Custo inválido'
+  const salvar = async () => {
+    setErro('')
 
-    const linhasValidas = linhas.filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
-    if (linhasValidas.length === 0) newErrors.linhas = 'Adicione ao menos um insumo com quantidade'
-
-    return newErrors
-  }
-
-  const getUnidadesBase = (insumoId) => {
-    const insumo = insumosData.find(i => i.id === parseInt(insumoId))
-    return insumo ? insumo.unidadeBase : ''
-  }
-
-  const handleSalvar = async () => {
-    const newErrors = validate()
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      showToast('⚠️ Preencha os campos obrigatórios corretamente')
-      return
-    }
+    if (modo === 'criar' && !pizzaId) { setErro('Selecione o produto da ficha'); return }
+    if (!custo || parseFloat(custo) < 0) { setErro('Informe um custo válido'); return }
 
     const ingredientes = linhas
-      .filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
-      .map(l => {
-        const unidadeBase = getUnidadesBase(l.insumoId)
-        let qtd = parseFloat(l.qtd)
-        if (l.unidade === 'g' || l.unidade === 'ml') {
-          qtd = qtd / 1000
-        }
+      .filter(l => l.insumoId && l.qtdPorUnidade && parseFloat(l.qtdPorUnidade) > 0)
+      .map(l => ({ insumoId: parseInt(l.insumoId), qtdPorUnidade: parseFloat(l.qtdPorUnidade) }))
 
-        return {
-          insumoId: parseInt(l.insumoId),
-          qtdPorUnidade: qtd,
-          unidade: unidadeBase
-        }
-      })
+    if (ingredientes.length === 0) { setErro('Adicione ao menos um insumo com quantidade'); return }
 
-
-
-
+    setSalvando(true)
     try {
-      const res = await fetch('http://localhost:3000/api/receitas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          pizzaId: parseInt(pizzaId),
-          custo: parseFloat(custo),
-          ingredientes,
-        })
+      const url = modo === 'criar'
+        ? 'http://localhost:3000/api/receitas'
+        : `http://localhost:3000/api/receitas/${fichaExistente.id}`
+      const method = modo === 'criar' ? 'POST' : 'PUT'
+      const body = modo === 'criar'
+        ? { pizzaId: parseInt(pizzaId), custo: parseFloat(custo), ingredientes }
+        : { custo: parseFloat(custo), ingredientes }
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
       })
+      const dados = await res.json()
+
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'falha ao salvar')
+        setErro(dados.error || dados.message || 'Não foi possível salvar a ficha.')
+        setSalvando(false)
+        return
       }
+
       onClose()
-      showToast(` Ficha técnica criada com sucesso!`)
-      onSucesso()
+      showToast(modo === 'criar' ? '✅ Ficha técnica criada com sucesso!' : '✅ Ficha técnica atualizada!')
+      await onSalvo()
     } catch (err) {
-      console.error(err)
-      showToast(` Erro ao salvar ficha técnica: ${err.message}`)
+      setErro('Não foi possível conectar ao servidor.')
+      setSalvando(false)
     }
   }
 
-
-
-  const linhasComErro = errors.linhas
-
   return (
-    <Modal title="Nova Ficha Técnica" onClose={onClose}>
-      <div className="form-group">
-        <label>Produto *</label>
-        <select
-          value={pizzaId}
-          onChange={e => { setPizzaId(e.target.value); if (errors.produto) setErrors({ ...errors, produto: null }) }}
-          className={errors.produto ? 'input-error' : ''}
-        >
-          <option value="">Selecione o produto...</option>
-          {pizzas
-            .filter(p => p.status === 'ok')
-            .map(p => <option key={p.id} value={p.id}>{p.nome} - {p.tipo}</option>)}
-        </select>
-        {errors.produto && <span className="form-error">{errors.produto}</span>}
-      </div>
+    <Modal title={modo === 'criar' ? 'Nova Ficha Técnica' : `Editar Ficha — ${fichaExistente.produtoNome}`} onClose={onClose}>
+      {modo === 'criar' && (
+        <div className="form-group">
+          <label>Produto *</label>
+          <select value={pizzaId} onChange={e => setPizzaId(e.target.value)}>
+            <option value="">Selecione o produto...</option>
+            {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} — {p.tipo}</option>)}
+          </select>
+        </div>
+      )}
 
       <div className="form-group">
         <label>Custo Estimado da Ficha (R$) *</label>
-        <input
-          type="number"
-          step="0.01"
-          placeholder="0.00"
-          value={custo}
-          onChange={e => { setCusto(e.target.value); if (errors.custo) setErrors({ ...errors, custo: null }) }}
-          className={errors.custo ? 'input-error' : ''}
-        />
-        {errors.custo && <span className="form-error">{errors.custo}</span>}
+        <input type="number" step="0.01" placeholder="0.00" value={custo} onChange={e => setCusto(e.target.value)} />
       </div>
 
       <div className="form-group">
@@ -151,23 +161,16 @@ function ModalNovaFicha({ onClose, onSucesso }) {
                 style={s.selectInsumo}
               >
                 <option value="">Selecione o insumo...</option>
-                {insumosData.map(ins => <option key={ins.id} value={ins.id}>{ins.nome}</option>)}
+                {insumos.map(i => <option key={i.id} value={i.id}>{i.nome}</option>)}
               </select>
               <input
                 type="number"
                 step="0.001"
                 placeholder="Qtd."
-                value={l.qtd}
-                onChange={e => atualizarLinha(l.id, 'qtd', e.target.value)}
+                value={l.qtdPorUnidade}
+                onChange={e => atualizarLinha(l.id, 'qtdPorUnidade', e.target.value)}
                 style={s.inputQtd}
               />
-              <select
-                value={l.unidade}
-                onChange={e => atualizarLinha(l.id, 'unidade', e.target.value)}
-                style={s.selectUnidade}
-              >
-                {unidadeOptions.map(u => <option key={u} value={u}>{u}</option>)}
-              </select>
               <button
                 type="button"
                 onClick={() => removerLinha(l.id)}
@@ -180,227 +183,91 @@ function ModalNovaFicha({ onClose, onSucesso }) {
             </div>
           ))}
         </div>
-        {linhasComErro && <span className="form-error">{linhasComErro}</span>}
         <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={adicionarLinha}>
           + Adicionar insumo
         </button>
       </div>
 
+      {erro && <span className="form-error">{erro}</span>}
+
       <div className="modal-actions">
-        <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-        <button className="btn btn-primary" onClick={handleSalvar}>Salvar Ficha</button>
+        <button className="btn btn-secondary" onClick={onClose} disabled={salvando}>Cancelar</button>
+        <button className="btn btn-primary" onClick={salvar} disabled={salvando}>
+          {salvando ? 'Salvando...' : modo === 'criar' ? 'Salvar Ficha' : 'Salvar alterações'}
+        </button>
       </div>
-    </Modal>
-  )
-}
-
-function ModalEditarFicha({ ficha, onClose, onSucesso }) {
-  const { showToast, token } = useApp()
-  const [custo, setCusto] = useState(String(ficha.custo))
-  const [linhas, setLinhas] = useState([])
-  const [insumosData, setInsumosData] = useState([])
-  const [carregando, setCarregando] = useState(true)
-  const [errors, setErrors] = useState({})
-
-  useEffect(() => {
-    
-    fetch('http://localhost:3000/api/insumos')
-      .then(r => r.json())
-      .then(data => setInsumosData(data))
-
-    fetch(`http://localhost:3000/api/receitas/${ficha.pizzaId}`)
-      .then(r => r.json())
-      .then(data => {
-        const linhasCarregadas = data.map(item => ({
-          id: proximoLinhaId++,
-          insumoId: String(item.insumoId),
-          qtd: String(item.qtdPorUnidade),
-          unidade: item.unidade || 'kg'
-        }))
-        setLinhas(linhasCarregadas.length > 0 ? linhasCarregadas : [novaLinha()])
-        setCarregando(false)
-      })
-  }, [])
-
-  const atualizarLinha = (id, campo, valor) => {
-    setLinhas(linhas.map(l => l.id === id ? { ...l, [campo]: valor } : l))
-  }
-
-  const adicionarLinha = () => setLinhas([...linhas, novaLinha()])
-
-  const removerLinha = (id) => {
-    if (linhas.length === 1) return
-    setLinhas(linhas.filter(l => l.id !== id))
-  }
-
-  const handleSalvar = async () => {
-    const newErrors = {}
-    if (!custo || parseFloat(custo) <= 0) newErrors.custo = 'Custo inválido'
-    const linhasValidas = linhas.filter(l => l.insumoId && l.qtd && parseFloat(l.qtd) > 0)
-    if (linhasValidas.length === 0) newErrors.linhas = 'Adicione ao menos um insumo com quantidade'
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      showToast('⚠️ Preencha os campos obrigatórios corretamente')
-      return
-    }
-
-    const ingredientes = linhasValidas.map(l => {
-      let qtd = parseFloat(l.qtd)
-      if (l.unidade === 'g' || l.unidade === 'ml') {
-        qtd = qtd / 1000
-      }
-      return {
-        insumoId: parseInt(l.insumoId),
-        qtdPorUnidade: qtd
-      }
-    })
-
-    try {
-      const res = await fetch(`http://localhost:3000/api/receitas/${ficha.id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json' ,
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ custo: parseFloat(custo), ingredientes })
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'falha ao salvar')
-      }
-      onClose()
-      showToast('✅ Ficha técnica atualizada com sucesso!')
-      onSucesso()
-    } catch (err) {
-      console.error(err)
-      showToast(`❌ Erro ao atualizar: ${err.message}`)
-    }
-  }
-
-  return (
-    <Modal title={`Editar Ficha — ${ficha.produtoNome}`} onClose={onClose}>
-      {carregando ? (
-        <p style={{ padding: 20, textAlign: 'center', color: 'var(--cinza)' }}>Carregando...</p>
-      ) : (
-        <>
-          <div className="form-group">
-            <label>Custo Estimado da Ficha (R$) *</label>
-            <input
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={custo}
-              onChange={e => { setCusto(e.target.value); if (errors.custo) setErrors({ ...errors, custo: null }) }}
-              className={errors.custo ? 'input-error' : ''}
-            />
-            {errors.custo && <span className="form-error">{errors.custo}</span>}
-          </div>
-
-          <div className="form-group">
-            <label>Insumos da Ficha *</label>
-            <div style={s.linhasWrap}>
-              {linhas.map((l) => (
-                <div key={l.id} style={s.linhaInsumo}>
-                  <select
-                    value={l.insumoId}
-                    onChange={e => atualizarLinha(l.id, 'insumoId', e.target.value)}
-                    style={s.selectInsumo}
-                  >
-                    <option value="">Selecione o insumo...</option>
-                    {insumosData.map(ins => <option key={ins.id} value={ins.id}>{ins.nome}</option>)}
-                  </select>
-                  <input
-                    type="number"
-                    step="0.001"
-                    placeholder="Qtd."
-                    value={l.qtd}
-                    onChange={e => atualizarLinha(l.id, 'qtd', e.target.value)}
-                    style={s.inputQtd}
-                  />
-                  <select
-                    value={l.unidade}
-                    onChange={e => atualizarLinha(l.id, 'unidade', e.target.value)}
-                    style={s.selectUnidade}
-                  >
-                    {unidadeOptions.map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => removerLinha(l.id)}
-                    style={s.btnRemover}
-                    title="Remover insumo"
-                    disabled={linhas.length === 1}
-                  >
-                    <IconTrash width={14} height={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {errors.linhas && <span className="form-error">{errors.linhas}</span>}
-            <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={adicionarLinha}>
-              + Adicionar insumo
-            </button>
-          </div>
-
-          <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-            <button className="btn btn-primary" onClick={handleSalvar}>Salvar Alterações</button>
-          </div>
-        </>
-      )}
     </Modal>
   )
 }
 
 export default function Receitas() {
-  const [modalNovaFicha, setModalNovaFicha] = useState(false)
   const [fichas, setFichas] = useState([])
-  const [fichaEditando, setFichaEditando] = useState(null)
+  const [produtos, setProdutos] = useState([])
+  const [insumos, setInsumos] = useState([])
+  const [fichaDetalhe, setFichaDetalhe] = useState(null)
+  const [modalForm, setModalForm] = useState(null) // { modo: 'criar' | 'editar', fichaExistente?, ingredientesExistentes? }
 
-  const carregarFichas = () => {
-    fetch('http://localhost:3000/api/receitas')
-      .then(r => r.json())
-      .then(data => setFichas(data))
+  const carregarFichas = async () => {
+    const res = await fetch('http://localhost:3000/api/receitas')
+    const data = await res.json()
+    setFichas(data)
   }
 
   useEffect(() => {
     carregarFichas()
+    fetch('http://localhost:3000/api/produtos').then(r => r.json()).then(setProdutos)
+    fetch('http://localhost:3000/api/insumos').then(r => r.json()).then(setInsumos)
   }, [])
+
+  const abrirEdicao = (ficha, ingredientes) => {
+    setFichaDetalhe(null)
+    setModalForm({ modo: 'editar', fichaExistente: ficha, ingredientesExistentes: ingredientes })
+  }
 
   return (
     <div className="page-fade">
       <div className="sec-header">
         <h3 className="sec-title">Fichas Técnicas</h3>
-        <button className="btn btn-terra" onClick={() => setModalNovaFicha(true)}>
+        <button className="btn btn-primary" onClick={() => setModalForm({ modo: 'criar' })}>
           + Nova Ficha
         </button>
       </div>
 
-      <div className="fichas-grid">
-        {fichas.map(f => (
-          <div key={f.id} className="ficha-card">
-            <div className="ficha-card-head">
-              <span className="ficha-card-nome">{f.produtoNome}</span>
-              <span className="ficha-card-badge">{f.totalInsumos} itens</span>
+      {fichas.length === 0 ? (
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--cinza)' }}>
+          Nenhuma ficha técnica cadastrada ainda.
+        </div>
+      ) : (
+        <div className="prod-cards">
+          {fichas.map(f => (
+            <div key={f.id} className="prod-card" onClick={() => setFichaDetalhe(f)}>
+              <div className="prod-card-icon"><IconClipboard width={22} height={22} /></div>
+              <h4>{f.produtoNome}</h4>
+              <p>{f.totalInsumos} insumo{f.totalInsumos === 1 ? '' : 's'} · Custo: R$ {Number(f.custo).toFixed(2)}</p>
             </div>
-            <p className="ficha-card-custo">
-              Custo estimado: <strong>R$ {Number(f.custo).toFixed(2)}</strong>
-            </p>
-            <button 
-              className="btn btn-secondary btn-sm"
-              style ={{ marginTop: 10 }}
-              onClick={() => setFichaEditando(f)}
-            >
-              Editar
-            </button>
-          
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {modalNovaFicha && <ModalNovaFicha onClose={() => setModalNovaFicha(false)} onSucesso={carregarFichas} />}
-        {fichaEditando && (<ModalEditarFicha ficha={fichaEditando} onClose={() => setFichaEditando(null)} onSucesso={carregarFichas} />)}
+      {fichaDetalhe && (
+        <ModalDetalheFicha
+          ficha={fichaDetalhe}
+          onClose={() => setFichaDetalhe(null)}
+          onEditar={abrirEdicao}
+        />
+      )}
+
+      {modalForm && (
+        <ModalFormFicha
+          modo={modalForm.modo}
+          fichaExistente={modalForm.fichaExistente}
+          ingredientesExistentes={modalForm.ingredientesExistentes}
+          produtos={produtos}
+          insumos={insumos}
+          onClose={() => setModalForm(null)}
+          onSalvo={carregarFichas}
+        />
+      )}
     </div>
   )
 }
@@ -413,7 +280,7 @@ const s = {
   },
   linhaInsumo: {
     display: 'grid',
-    gridTemplateColumns: '1fr 90px 100px 32px',
+    gridTemplateColumns: '1fr 100px 32px',
     gap: 8,
     alignItems: 'center',
   },
@@ -439,16 +306,6 @@ const s = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-  },
-  selectUnidade: {
-    padding: '8px 10px',
-    border: '1.5px solid var(--border)',
-    borderRadius: 'var(--radius-md)',
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: '0.84rem',
-    color: 'var(--texto)',
-    background: 'var(--bg-input)',
-    outline: 'none',
   },
   btnRemover: {
     width: 32,
