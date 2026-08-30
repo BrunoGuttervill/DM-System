@@ -150,8 +150,9 @@ function ModalLimparCache({ onClose }) {
   return (
     <Modal title="Limpar cache do sistema?" onClose={onClose}>
       <p style={{ fontSize: '0.9rem', color: 'var(--texto)', lineHeight: 1.6, marginBottom: 8 }}>
-        Isso remove dados temporários salvos no navegador (incluindo a preferência de tema claro/escuro)
-        e recarrega a página. Não afeta os dados salvos no banco (insumos, produtos, fornecedores etc.).
+        Isso remove dados temporários salvos no navegador (incluindo a preferência de tema claro/escuro
+        e as preferências de notificação) e recarrega a página. Não afeta os dados salvos no banco
+        (insumos, produtos, fornecedores etc.).
       </p>
       <div className="modal-actions">
         <button className="btn btn-secondary" onClick={onClose} disabled={limpando}>Cancelar</button>
@@ -165,11 +166,13 @@ function ModalLimparCache({ onClose }) {
 
 export default function Configuracoes({ onLogout }) {
   const { tema, definirTema } = useTheme()
-  const { showToast, fotoPerfil, setFotoPerfil, usuario, setUsuario } = useApp()
+  const {
+    showToast, fotoPerfil, setFotoPerfil, usuario, setUsuario,
+    notifEstoque, setNotifEstoque,
+    notifVencimento, setNotifVencimento,
+    notifProducao, setNotifProducao,
+  } = useApp()
 
-  const [notifEstoque, setNotifEstoque] = useState(true)
-  const [notifVencimento, setNotifVencimento] = useState(true)
-  const [notifProducao, setNotifProducao] = useState(false)
   const [modalLogout, setModalLogout] = useState(false)
   const [modalSenha, setModalSenha] = useState(false)
   const [modalCache, setModalCache] = useState(false)
@@ -201,7 +204,6 @@ export default function Configuracoes({ onLogout }) {
       return
     }
 
-    // Preview imediato, enquanto o upload acontece
     const preview = URL.createObjectURL(file)
     setFotoPerfil(preview)
     e.target.value = ''
@@ -258,7 +260,6 @@ export default function Configuracoes({ onLogout }) {
         return
       }
 
-      // Atualiza o contexto global — Sidebar, Topbar e aqui mesmo refletem na hora
       setUsuario(u => ({ ...u, ...dados }))
       showToast('✅ Configurações salvas!')
     } catch (err) {
