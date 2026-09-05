@@ -1,0 +1,492 @@
+import { useState, useEffect } from 'react'
+import Modal from '../components/Modal'
+import { useApp } from '../context/AppContext'
+import { IconSearch, IconTrash } from '../components/Icons'
+
+const FORMAS_PAGAMENTO = ['Dinheiro', 'Pix', 'Cartão de Débito', 'Cartão de Crédito']
+
+let proximoItemId = 1
+function novoItem() {
+  return { id: proximoItemId++, produtoId: '', tipoPreco: 'varejo', precoUnitario: '', quantidade: '' }
+}
+
+function ModalDetalheVenda({ venda, onClose }) {
+  const [itens, setItens] = useState(null)
+
+  useEffect(() => {
+    fetch(`http://localhost:3000/api/vendas/${venda.id}`)
+      .then(r => r.json())
+      .then(setItens)
+  }, [venda.id])
+
+  return (
+    <Modal title={`Venda #${venda.id}`} onClose={onClose}>
+      <p style={{ fontSize: '0.85rem', color: 'var(--cinza)', marginBottom: 14 }}>
+        {venda.data} · {venda.responsavel} · {venda.formaPagamento}
+      </p>
+
+      {itens === null ? (
+        <p style={{ color: 'var(--cinza)', fontSize: '0.85rem' }}>Carregando itens...</p>
+      ) : (
+        <div className="table-wrap" style={{ marginBottom: 0 }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Qtd.</th>
+                <th>Preço Unit.</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {itens.map(it => (
+                <tr key={it.id}>
+                  <td><strong>{it.produtoNome}</strong></td>
+                  <td>{it.quantidade}</td>
+                  <td>R$ {Number(it.precoUnitario).toFixed(2)}</td>
+                  <td>R$ {Number(it.subtotal).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {venda.observacoes && (
+        <p style={{ fontSize: '0.82rem', color: 'var(--cinza)', marginTop: 14 }}>
+          <strong>Observações:</strong> {venda.observacoes}
+        </p>
+      )}
+
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose}>Fechar</button>
+      </div>
+    </Modal>
+  )
+}
+
+function ModalRegistrarVenda({ produtos, onClose, onSalvo }) {
+  const { showToast, token, usuario } = useApp()
+  const [responsavel, setResponsavel] = useState(usuario?.nome || '')
+  const [formaPagamento, setFormaPagamento] = useState('Dinheiro')
+  const [observacoes, setObservacoes] = useState('')
+  const [itens, setItens] = useState([novoItem()])
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  const produtoPorId = (id) => produtos.find(p => String(p.id) === String(id))
+
+  const atualizarItem = (id, campo, valor) => {
+    setItens(itens.map(it => {
+      if (it.id !== id) return it
+      const atualizado = { ...it, [campo]: valor }
+
+      if (campo === 'produtoId') {
+        const produto = produtoPorId(valor)
+        atualizado.tipoPreco = 'varejo'
+        atualizado.precoUnitario = produto ? produto.precoVarejo : ''
+      }
+      return atualizado
+    }))
+  }
+
+  const alternarPreco = (id) => {
+    setItens(itens.map(it => {
+      if (it.id !== id) return it
+      const produto = produtoPorId(it.produtoId)
+      if (!produto) return it
+      const novoTipo = it.tipoPreco === 'varejo' ? 'atacado' : 'varejo'
+      return {
+        ...it,
+        tipoPreco: novoTipo,
+        precoUnitario: novoTipo === 'varejo' ? produto.precoVarejo : produto.precoAtacado,
+      }
+    }))
+  }
+
+  const adicionarItem = () => setItens([...itens, novoItem()])
+  const removerItem = (id) => {
+    if (itens.length === 1) return
+    setItens(itens.filter(it => it.id !== id))
+  }
+
+  const total = itens.reduce((soma, it) => {
+    const qtd = parseFloat(it.quantidade) || 0
+    const preco = parseFloat(it.precoUnitario) || 0
+    return soma + qtd * preco
+  }, 0)
+
+  const salvar = async () => {
+    setErro('')
+    if (!responsavel.trim()) { setErro('Informe o responsável pela venda.'); return }
+
+    const itensValidos = itens.filter(it => it.produtoId && it.quantidade && parseFloat(it.quantidade) > 0)
+    if (itensValidos.length === 0) { setErro('Adicione ao menos um produto com quantidade.'); return }
+
+    for (const it of itensValidos) {
+      const produto = produtoPorId(it.produtoId)
+      if (produto && parseFloat(it.quantidade) > produto.qtd) {
+        setErro(`Estoque insuficiente de "${produto.nome}". Disponível: ${produto.qtd}.`)
+        return
+      }
+    }
+
+    setSalvando(true)
+    try {
+      const res = await fetch('http://localhost:3000/api/vendas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          responsavel,
+          formaPagamento,
+          observacoes,
+          itens: itensValidos.map(it => ({
+            produtoId: parseInt(it.produtoId),
+            quantidade: parseFloat(it.quantidade),
+            precoUnitario: parseFloat(it.precoUnitario),
+          })),
+        }),
+      })
+      const dados = await res.json()
+
+      if (!res.ok) {
+        setErro(dados.error || 'Não foi possível registrar a venda.')
+        setSalvando(false)
+        return
+      }
+
+      onClose()
+      showToast(`✅ Venda registrada! Total: R$ ${Number(dados.total).toFixed(2)}`)
+      await onSalvo()
+    } catch (err) {
+      setErro('Não foi possível conectar ao servidor.')
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Modal title="Registrar Venda" onClose={onClose}>
+      <div className="form-row">
+        <div className="form-group">
+          <label>Responsável *</label>
+          <input type="text" placeholder="Nome de quem vendeu" value={responsavel} onChange={e => setResponsavel(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Forma de Pagamento</label>
+          <select value={formaPagamento} onChange={e => setFormaPagamento(e.target.value)}>
+            {FORMAS_PAGAMENTO.map(f => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Produtos Vendidos *</label>
+        <div style={s.carrinhoWrap}>
+          {itens.map(it => {
+            const produto = produtoPorId(it.produtoId)
+            const subtotal = (parseFloat(it.quantidade) || 0) * (parseFloat(it.precoUnitario) || 0)
+            return (
+              <div key={it.id} style={s.linhaItem}>
+                <select
+                  value={it.produtoId}
+                  onChange={e => atualizarItem(it.id, 'produtoId', e.target.value)}
+                  style={s.selectProduto}
+                >
+                  <option value="">Selecione o produto...</option>
+                  {produtos.map(p => (
+                    <option key={p.id} value={p.id}>{p.nome} ({p.qtd} disp.)</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Qtd."
+                  value={it.quantidade}
+                  onChange={e => atualizarItem(it.id, 'quantidade', e.target.value)}
+                  style={s.inputQtd}
+                />
+                <button
+                  type="button"
+                  onClick={() => alternarPreco(it.id)}
+                  style={s.btnPreco}
+                  disabled={!produto}
+                  title="Alternar entre varejo/atacado"
+                >
+                  {it.tipoPreco === 'varejo' ? 'Varejo' : 'Atacado'}: R$ {Number(it.precoUnitario || 0).toFixed(2)}
+                </button>
+                <span style={s.subtotalTxt}>R$ {subtotal.toFixed(2)}</span>
+                <button
+                  type="button"
+                  onClick={() => removerItem(it.id)}
+                  style={s.btnRemover}
+                  disabled={itens.length === 1}
+                  title="Remover item"
+                >
+                  <IconTrash width={14} height={14} />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+        <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={adicionarItem}>
+          + Adicionar produto
+        </button>
+      </div>
+
+      <div className="form-group">
+        <label>Observações</label>
+        <textarea rows="2" placeholder="Opcional" value={observacoes} onChange={e => setObservacoes(e.target.value)} />
+      </div>
+
+      <div style={s.totalBox}>
+        <span>Total da venda</span>
+        <strong>R$ {total.toFixed(2)}</strong>
+      </div>
+
+      {erro && <span className="form-error">{erro}</span>}
+
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose} disabled={salvando}>Cancelar</button>
+        <button className="btn btn-primary" onClick={salvar} disabled={salvando}>
+          {salvando ? 'Registrando...' : 'Registrar Venda'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
+export default function Vendas() {
+  const [vendas, setVendas] = useState([])
+  const [produtos, setProdutos] = useState([])
+  const [modalAberto, setModalAberto] = useState(false)
+  const [vendaDetalhe, setVendaDetalhe] = useState(null)
+  const [busca, setBusca] = useState('')
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const ITENS_POR_PAGINA = 10
+
+  const carregarVendas = async () => {
+    const res = await fetch('http://localhost:3000/api/vendas')
+    const data = await res.json()
+    setVendas(data)
+  }
+
+  const carregarProdutos = async () => {
+    const res = await fetch('http://localhost:3000/api/produtos')
+    const data = await res.json()
+    setProdutos(data)
+  }
+
+  useEffect(() => {
+    carregarVendas()
+    carregarProdutos()
+  }, [])
+
+  const onVendaSalva = async () => {
+    await Promise.all([carregarVendas(), carregarProdutos()])
+  }
+
+  const termo = busca.toLowerCase()
+  const vendasFiltradas = vendas.filter(v =>
+    !termo ||
+    v.responsavel.toLowerCase().includes(termo) ||
+    v.formaPagamento.toLowerCase().includes(termo)
+  )
+
+  const totalPaginas = Math.max(1, Math.ceil(vendasFiltradas.length / ITENS_POR_PAGINA))
+
+  useEffect(() => {
+    if (paginaAtual > totalPaginas) setPaginaAtual(totalPaginas)
+  }, [totalPaginas, paginaAtual])
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
+
+  const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
+  const vendasPaginadas = vendasFiltradas.slice(inicio, inicio + ITENS_POR_PAGINA)
+
+  return (
+    <div className="page-fade">
+      <div className="sec-header">
+        <h3 className="sec-title">Vendas</h3>
+        <div className="sec-actions">
+          <div className="search-wrap">
+            <IconSearch className="search-icon" width={15} height={15} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar venda..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={() => setModalAberto(true)}>
+            + Registrar Venda
+          </button>
+        </div>
+      </div>
+
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data / Hora</th>
+              <th>Responsável</th>
+              <th>Forma de Pagamento</th>
+              <th>Itens</th>
+              <th>Total</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {vendasFiltradas.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
+                  {vendas.length === 0 ? 'Nenhuma venda registrada' : 'Nenhuma venda encontrada'}
+                </td>
+              </tr>
+            ) : (
+              vendasPaginadas.map(v => (
+                <tr key={v.id}>
+                  <td>{v.data}</td>
+                  <td>{v.responsavel}</td>
+                  <td>{v.formaPagamento}</td>
+                  <td>{v.totalItens}</td>
+                  <td><strong>R$ {Number(v.total).toFixed(2)}</strong></td>
+                  <td>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setVendaDetalhe(v)}>
+                      Ver itens
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {vendasFiltradas.length > 0 && (
+        <div className="pagination">
+          <span className="pagination-info">
+            Mostrando {inicio + 1}–{Math.min(inicio + ITENS_POR_PAGINA, vendasFiltradas.length)} de {vendasFiltradas.length}
+          </span>
+          <div className="pagination-btns">
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.max(1, p - 1))}
+              disabled={paginaAtual === 1}
+            >
+              Anterior
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+              <button
+                key={n}
+                className={`pagination-btn ${n === paginaAtual ? 'active' : ''}`}
+                onClick={() => setPaginaAtual(n)}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              className="pagination-btn"
+              onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))}
+              disabled={paginaAtual === totalPaginas}
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
+
+      {modalAberto && (
+        <ModalRegistrarVenda produtos={produtos} onClose={() => setModalAberto(false)} onSalvo={onVendaSalva} />
+      )}
+      {vendaDetalhe && (
+        <ModalDetalheVenda venda={vendaDetalhe} onClose={() => setVendaDetalhe(null)} />
+      )}
+    </div>
+  )
+}
+
+const s = {
+  carrinhoWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  },
+  linhaItem: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 70px 130px 90px 32px',
+    gap: 8,
+    alignItems: 'center',
+  },
+  selectProduto: {
+    padding: '8px 10px',
+    border: '1.5px solid var(--border)',
+    borderRadius: 'var(--radius-md)',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '0.84rem',
+    color: 'var(--texto)',
+    background: 'var(--bg-input)',
+    outline: 'none',
+    minWidth: 0,
+  },
+  inputQtd: {
+    padding: '8px 10px',
+    border: '1.5px solid var(--border)',
+    borderRadius: 'var(--radius-md)',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '0.84rem',
+    color: 'var(--texto)',
+    background: 'var(--bg-input)',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  btnPreco: {
+    padding: '8px 10px',
+    border: '1.5px solid var(--terra)',
+    borderRadius: 'var(--radius-md)',
+    background: 'rgba(196,98,45,0.08)',
+    color: 'var(--terra)',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '0.76rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  subtotalTxt: {
+    fontSize: '0.84rem',
+    fontWeight: 600,
+    color: 'var(--escuro)',
+    textAlign: 'right',
+  },
+  btnRemover: {
+    width: 32,
+    height: 32,
+    borderRadius: 'var(--radius-md)',
+    border: '1.5px solid var(--border)',
+    background: 'var(--bg-card)',
+    color: 'var(--vermelho)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  totalBox: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    background: 'var(--bg-hover)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-md)',
+    padding: '12px 16px',
+    marginBottom: 16,
+    fontSize: '0.9rem',
+    color: 'var(--texto)',
+  },
+}
