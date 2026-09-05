@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import * as XLSX from 'xlsx'
+import Cropper from 'react-easy-crop'
 import { useTheme } from '../context/ThemeContext'
 import { useApp } from '../context/AppContext'
 import Modal from '../components/Modal'
@@ -9,6 +10,131 @@ import {
   IconKey, IconSmartphone, IconBox, IconTrash,
   IconInfo, IconLogout, IconSun, IconMoon, IconEdit,
 } from '../components/Icons'
+
+// --- utilidades de recorte de imagem (canvas) ---
+function criarImagem(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.addEventListener('load', () => resolve(image))
+    image.addEventListener('error', (err) => reject(err))
+    image.setAttribute('crossOrigin', 'anonymous')
+    image.src = url
+  })
+}
+
+function grauParaRadiano(graus) {
+  return (graus * Math.PI) / 180
+}
+
+async function gerarImagemRecortada(imagemSrc, areaRecortePx, rotacaoGraus = 0) {
+  const image = await criarImagem(imagemSrc)
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  const rotRad = grauParaRadiano(rotacaoGraus)
+
+  const tamanhoMax = Math.max(image.width, image.height)
+  const areaSegura = 2 * ((tamanhoMax / 2) * Math.sqrt(2))
+
+  canvas.width = areaSegura
+  canvas.height = areaSegura
+
+  ctx.translate(areaSegura / 2, areaSegura / 2)
+  ctx.rotate(rotRad)
+  ctx.translate(-areaSegura / 2, -areaSegura / 2)
+  ctx.drawImage(image, areaSegura / 2 - image.width / 2, areaSegura / 2 - image.height / 2)
+
+  const dadosImagem = ctx.getImageData(0, 0, areaSegura, areaSegura)
+
+  canvas.width = areaRecortePx.width
+  canvas.height = areaRecortePx.height
+
+  ctx.putImageData(
+    dadosImagem,
+    Math.round(0 - areaSegura / 2 + image.width / 2 - areaRecortePx.x),
+    Math.round(0 - areaSegura / 2 + image.height / 2 - areaRecortePx.y)
+  )
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92)
+  })
+}
+
+function ModalAjustarFoto({ imagemSrc, onCancelar, onConfirmar }) {
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [rotacao, setRotacao] = useState(0)
+  const [areaRecortePx, setAreaRecortePx] = useState(null)
+  const [processando, setProcessando] = useState(false)
+
+  const aoCompletarRecorte = useCallback((_areaPercentual, areaPixels) => {
+    setAreaRecortePx(areaPixels)
+  }, [])
+
+  const confirmar = async () => {
+    if (!areaRecortePx) return
+    setProcessando(true)
+    try {
+      const blob = await gerarImagemRecortada(imagemSrc, areaRecortePx, rotacao)
+      onConfirmar(blob)
+    } finally {
+      setProcessando(false)
+    }
+  }
+
+  return (
+    <Modal title="Ajustar foto de perfil" onClose={onCancelar}>
+      <div style={s.cropWrap}>
+        <Cropper
+          image={imagemSrc}
+          crop={crop}
+          zoom={zoom}
+          rotation={rotacao}
+          aspect={1}
+          cropShape="round"
+          showGrid={false}
+          onCropChange={setCrop}
+          onZoomChange={setZoom}
+          onRotationChange={setRotacao}
+          onCropComplete={aoCompletarRecorte}
+        />
+      </div>
+
+      <div style={s.sliderGrupo}>
+        <label style={s.sliderLabel}>Zoom</label>
+        <input
+          type="range"
+          min={1}
+          max={3}
+          step={0.05}
+          value={zoom}
+          onChange={e => setZoom(Number(e.target.value))}
+          style={s.slider}
+        />
+      </div>
+
+      <div style={s.sliderGrupo}>
+        <label style={s.sliderLabel}>Ângulo</label>
+        <input
+          type="range"
+          min={0}
+          max={360}
+          step={1}
+          value={rotacao}
+          onChange={e => setRotacao(Number(e.target.value))}
+          style={s.slider}
+        />
+        <span style={s.sliderValor}>{rotacao}°</span>
+      </div>
+
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onCancelar} disabled={processando}>Cancelar</button>
+        <button className="btn btn-primary" onClick={confirmar} disabled={processando || !areaRecortePx}>
+          {processando ? 'Aplicando...' : 'Salvar foto'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
 
 function Secao({ titulo, children }) {
   return (
@@ -192,9 +318,11 @@ export default function Configuracoes({ onLogout }) {
   const fotoExibida = fotoPerfil || (usuario?.fotoUrl ? `http://localhost:3000${usuario.fotoUrl}` : null)
 
   const escolherFoto = () => inputFotoRef.current?.click()
+  const [fotoParaAjustar, setFotoParaAjustar] = useState(null)
 
-  const handleFotoSelecionada = async (e) => {
+  const handleFotoSelecionada = (e) => {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
@@ -206,9 +334,19 @@ export default function Configuracoes({ onLogout }) {
       return
     }
 
-    const preview = URL.createObjectURL(file)
+    setFotoParaAjustar(URL.createObjectURL(file))
+  }
+
+  const cancelarAjusteFoto = () => {
+    if (fotoParaAjustar) URL.revokeObjectURL(fotoParaAjustar)
+    setFotoParaAjustar(null)
+  }
+
+  const confirmarFotoRecortada = async (blob) => {
+    const preview = URL.createObjectURL(blob)
     setFotoPerfil(preview)
-    e.target.value = ''
+    if (fotoParaAjustar) URL.revokeObjectURL(fotoParaAjustar)
+    setFotoParaAjustar(null)
 
     if (!usuario?.id) {
       showToast('❌ Não foi possível identificar o usuário logado.')
@@ -216,7 +354,7 @@ export default function Configuracoes({ onLogout }) {
     }
 
     const formData = new FormData()
-    formData.append('foto', file)
+    formData.append('foto', blob, 'foto.jpg')
 
     try {
       const res = await fetch(`http://localhost:3000/api/usuario/${usuario.id}/foto`, {
@@ -472,6 +610,14 @@ export default function Configuracoes({ onLogout }) {
           {salvandoPerfil ? 'Salvando...' : 'Salvar alterações'}
         </button>
       </div>
+
+      {fotoParaAjustar && (
+        <ModalAjustarFoto
+          imagemSrc={fotoParaAjustar}
+          onCancelar={cancelarAjusteFoto}
+          onConfirmar={confirmarFotoRecortada}
+        />
+      )}
 
       {}
       {modalCache && (
@@ -815,5 +961,39 @@ const s = {
     fontSize: '0.88rem',
     fontWeight: 600,
     cursor: 'pointer',
+  },
+
+  cropWrap: {
+    position: 'relative',
+    width: '100%',
+    height: 320,
+    background: '#1C100A',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 18,
+  },
+  sliderGrupo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  sliderLabel: {
+    fontSize: '0.78rem',
+    fontWeight: 600,
+    color: 'var(--cinza)',
+    width: 46,
+    flexShrink: 0,
+  },
+  slider: {
+    flex: 1,
+    accentColor: 'var(--terra)',
+  },
+  sliderValor: {
+    fontSize: '0.78rem',
+    color: 'var(--cinza)',
+    width: 36,
+    textAlign: 'right',
+    flexShrink: 0,
   },
 }
