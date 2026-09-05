@@ -9,6 +9,7 @@ import Insumos      from './pages/Insumos'
 import Produtos     from './pages/Produtos'
 import Receitas     from './pages/Receitas'
 import Producao     from './pages/Producao'
+import Vendas       from './pages/Vendas'
 import Fornecedores from './pages/Fornecedores'
 import Relatorios   from './pages/Relatorios'
 import Configuracoes from './pages/Configuracoes'
@@ -20,6 +21,7 @@ const pages = {
   produtos:       Produtos,
   receitas:       Receitas,
   producao:       Producao,
+  vendas:         Vendas,
   fornecedores:   Fornecedores,
   relatorios:     Relatorios,
   configuracoes:  Configuracoes,
