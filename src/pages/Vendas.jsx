@@ -341,11 +341,49 @@ function ModalRegistrarVenda({ produtos, onClose, onSalvo }) {
   )
 }
 
+function ModalConfirmarExclusao({ venda, onClose, onExcluido }) {
+  const { showToast, token } = useApp()
+  const [excluindo, setExcluindo] = useState(false)
+
+  const confirmar = async () => {
+    setExcluindo(true)
+    try {
+      const res = await fetch(`http://localhost:3000/api/vendas/${venda.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Falha ao excluir')
+      onClose()
+      showToast('🗑️ Venda excluída e estoque devolvido.')
+      await onExcluido()
+    } catch (err) {
+      showToast('❌ Não foi possível excluir a venda. Tente novamente.')
+      setExcluindo(false)
+    }
+  }
+
+  return (
+    <Modal title="Excluir venda?" onClose={onClose}>
+      <p style={{ fontSize: '0.9rem', color: 'var(--texto)', lineHeight: 1.6, marginBottom: 8 }}>
+        Tem certeza que deseja excluir a venda <strong>#{venda.id}</strong> ({venda.responsavel}, R$ {Number(venda.total).toFixed(2)})?
+        Os produtos vendidos voltam pro estoque automaticamente. Essa ação não pode ser desfeita.
+      </p>
+      <div className="modal-actions">
+        <button className="btn btn-secondary" onClick={onClose} disabled={excluindo}>Cancelar</button>
+        <button className="btn btn-danger" onClick={confirmar} disabled={excluindo}>
+          {excluindo ? 'Excluindo...' : 'Sim, excluir'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 export default function Vendas() {
   const [vendas, setVendas] = useState([])
   const [produtos, setProdutos] = useState([])
   const [modalAberto, setModalAberto] = useState(false)
   const [vendaDetalhe, setVendaDetalhe] = useState(null)
+  const [vendaExcluindo, setVendaExcluindo] = useState(null)
   const [busca, setBusca] = useState('')
   const [paginaAtual, setPaginaAtual] = useState(1)
   const [exportando, setExportando] = useState(false)
@@ -550,9 +588,19 @@ export default function Vendas() {
                   <td>{v.totalItens}</td>
                   <td><strong>R$ {Number(v.total).toFixed(2)}</strong></td>
                   <td>
-                    <button className="btn btn-secondary btn-sm" onClick={() => setVendaDetalhe(v)}>
-                      Ver itens
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setVendaDetalhe(v)}>
+                        Ver itens
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ color: 'var(--vermelho)' }}
+                        onClick={() => setVendaExcluindo(v)}
+                        title="Excluir"
+                      >
+                        <IconTrash width={14} height={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -599,6 +647,13 @@ export default function Vendas() {
       )}
       {vendaDetalhe && (
         <ModalDetalheVenda venda={vendaDetalhe} onClose={() => setVendaDetalhe(null)} />
+      )}
+      {vendaExcluindo && (
+        <ModalConfirmarExclusao
+          venda={vendaExcluindo}
+          onClose={() => setVendaExcluindo(null)}
+          onExcluido={onVendaSalva}
+        />
       )}
     </div>
   )
