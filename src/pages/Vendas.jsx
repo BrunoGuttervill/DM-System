@@ -1,13 +1,96 @@
 import { useState, useEffect } from 'react'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import Modal from '../components/Modal'
 import { useApp } from '../context/AppContext'
 import { IconSearch, IconTrash } from '../components/Icons'
 
 const FORMAS_PAGAMENTO = ['Dinheiro', 'Pix', 'Cartão de Débito', 'Cartão de Crédito']
 
+const NOMES_MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
+
 let proximoItemId = 1
 function novoItem() {
   return { id: proximoItemId++, produtoId: '', tipoPreco: 'varejo', precoUnitario: '', quantidade: '' }
+}
+
+function SeletorPeriodo({ mes, ano, onMudar }) {
+  const hoje = new Date()
+  const ehMesAtual = mes === hoje.getMonth() && ano === hoje.getFullYear()
+
+  const irParaMesAnterior = () => {
+    if (mes === 0) onMudar(11, ano - 1)
+    else onMudar(mes - 1, ano)
+  }
+
+  const irParaProximoMes = () => {
+    if (ehMesAtual) return
+    if (mes === 11) onMudar(0, ano + 1)
+    else onMudar(mes + 1, ano)
+  }
+
+  return (
+    <div style={pS.wrap}>
+      <button type="button" onClick={irParaMesAnterior} style={pS.setaBtn} title="Mês anterior">‹</button>
+      <span style={pS.label}>{NOMES_MESES[mes]} {ano}</span>
+      <button
+        type="button"
+        onClick={irParaProximoMes}
+        style={{ ...pS.setaBtn, ...(ehMesAtual ? pS.setaBtnDisabled : {}) }}
+        disabled={ehMesAtual}
+        title="Próximo mês"
+      >
+        ›
+      </button>
+      {!ehMesAtual && (
+        <button type="button" onClick={() => onMudar(hoje.getMonth(), hoje.getFullYear())} style={pS.hojeBtn}>
+          Mês atual
+        </button>
+      )}
+    </div>
+  )
+}
+
+function gerarPdfPeriodo(vendas, tituloPeriodo, nomeArquivo) {
+  const doc = new jsPDF()
+  const hojeStr = new Date().toLocaleDateString('pt-BR')
+
+  doc.setFillColor(107, 26, 42)
+  doc.rect(0, 0, 210, 28, 'F')
+  doc.setTextColor(247, 237, 216)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(16)
+  doc.text('Dany Massas', 14, 13)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.text('Controle de Estoque · MassaStock', 14, 19)
+
+  doc.setTextColor(30, 20, 15)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(14)
+  doc.text(`Vendas — ${tituloPeriodo}`, 14, 40)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9.5)
+  doc.setTextColor(122, 106, 90)
+  doc.text(`Gerado em ${hojeStr} · ${vendas.length} venda(s) no período`, 14, 47)
+
+  const totalGeral = vendas.reduce((soma, v) => soma + Number(v.total || 0), 0)
+
+  autoTable(doc, {
+    startY: 56,
+    head: [['Data / Hora', 'Responsável', 'Forma de Pagamento', 'Itens', 'Total']],
+    body: vendas.map(v => [v.data, v.responsavel, v.formaPagamento, `${v.totalItens}`, `R$ ${Number(v.total).toFixed(2)}`]),
+    foot: [['', '', '', 'Total do período', `R$ ${totalGeral.toFixed(2)}`]],
+    headStyles: { fillColor: [107, 26, 42], textColor: [247, 237, 216], fontSize: 8.5 },
+    bodyStyles: { fontSize: 8 },
+    footStyles: { fillColor: [239, 224, 191], textColor: [28, 16, 10], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [250, 245, 236] },
+  })
+
+  doc.save(nomeArquivo)
 }
 
 function ModalDetalheVenda({ venda, onClose }) {
@@ -265,7 +348,39 @@ export default function Vendas() {
   const [vendaDetalhe, setVendaDetalhe] = useState(null)
   const [busca, setBusca] = useState('')
   const [paginaAtual, setPaginaAtual] = useState(1)
+  const [exportando, setExportando] = useState(false)
+  const agora = new Date()
+  const [mesSelecionado, setMesSelecionado] = useState(agora.getMonth())
+  const [anoSelecionado, setAnoSelecionado] = useState(agora.getFullYear())
+  const [diaSelecionado, setDiaSelecionado] = useState('') // formato YYYY-MM-DD
+  const [anoDigitado, setAnoDigitado] = useState('')
   const ITENS_POR_PAGINA = 10
+
+  const diaAtivo = Boolean(diaSelecionado)
+
+  const escolherDia = (valor) => {
+    setDiaSelecionado(valor)
+    if (valor) {
+      const [ano, mes] = valor.split('-').map(Number)
+      setMesSelecionado(mes - 1)
+      setAnoSelecionado(ano)
+    }
+  }
+
+  const limparDia = () => setDiaSelecionado('')
+
+  const mudarPeriodo = (mes, ano) => {
+    setDiaSelecionado('')
+    setMesSelecionado(mes)
+    setAnoSelecionado(ano)
+  }
+
+  const irParaAno = () => {
+    const ano = parseInt(anoDigitado, 10)
+    if (!ano || ano < 1900 || ano > 2200) return
+    mudarPeriodo(0, ano)
+    setAnoDigitado('')
+  }
 
   const carregarVendas = async () => {
     const res = await fetch('http://localhost:3000/api/vendas')
@@ -288,8 +403,15 @@ export default function Vendas() {
     await Promise.all([carregarVendas(), carregarProdutos()])
   }
 
+  const vendasDoPeriodo = diaAtivo
+    ? vendas.filter(v => String(v.data).slice(0, 10) === diaSelecionado)
+    : vendas.filter(v => {
+        const d = new Date(v.data)
+        return d.getMonth() === mesSelecionado && d.getFullYear() === anoSelecionado
+      })
+
   const termo = busca.toLowerCase()
-  const vendasFiltradas = vendas.filter(v =>
+  const vendasFiltradas = vendasDoPeriodo.filter(v =>
     !termo ||
     v.responsavel.toLowerCase().includes(termo) ||
     v.formaPagamento.toLowerCase().includes(termo)
@@ -303,10 +425,30 @@ export default function Vendas() {
 
   useEffect(() => {
     setPaginaAtual(1)
-  }, [busca])
+  }, [busca, mesSelecionado, anoSelecionado, diaSelecionado])
+
+  const vendasOrdenadas = [...vendasFiltradas].sort((a, b) => new Date(b.data) - new Date(a.data))
 
   const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
-  const vendasPaginadas = vendasFiltradas.slice(inicio, inicio + ITENS_POR_PAGINA)
+  const vendasPaginadas = vendasOrdenadas.slice(inicio, inicio + ITENS_POR_PAGINA)
+
+  const exportarPeriodo = () => {
+    if (vendasOrdenadas.length === 0) return
+    setExportando(true)
+    try {
+      let tituloPeriodo, nomeArquivo
+      if (diaAtivo) {
+        tituloPeriodo = diaSelecionado.split('-').reverse().join('/')
+        nomeArquivo = `vendas-${diaSelecionado}.pdf`
+      } else {
+        tituloPeriodo = `${NOMES_MESES[mesSelecionado]} ${anoSelecionado}`
+        nomeArquivo = `vendas-${String(mesSelecionado + 1).padStart(2, '0')}-${anoSelecionado}.pdf`
+      }
+      gerarPdfPeriodo(vendasOrdenadas, tituloPeriodo, nomeArquivo)
+    } finally {
+      setExportando(false)
+    }
+  }
 
   return (
     <div className="page-fade">
@@ -329,6 +471,53 @@ export default function Vendas() {
         </div>
       </div>
 
+      <div style={pS.barraPeriodo}>
+        <div style={pS.wrap}>
+          <SeletorPeriodo mes={mesSelecionado} ano={anoSelecionado} onMudar={mudarPeriodo} />
+          <span style={pS.separador}>|</span>
+          <span style={pS.dataLabel}>Ir para o ano:</span>
+          <input
+            type="number"
+            placeholder="2026"
+            className="filter-select"
+            style={pS.anoInput}
+            value={anoDigitado}
+            onChange={e => setAnoDigitado(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && irParaAno()}
+          />
+          <button type="button" onClick={irParaAno} style={pS.limparBtn} disabled={!anoDigitado}>
+            Ir
+          </button>
+          <span style={pS.separador}>|</span>
+          <span style={pS.dataLabel}>Buscar dia específico:</span>
+          <input
+            type="date"
+            className="filter-select"
+            style={{ ...pS.dataInput, ...(diaAtivo ? pS.dataInputAtivo : {}) }}
+            value={diaSelecionado}
+            onChange={e => escolherDia(e.target.value)}
+          />
+          {diaAtivo && (
+            <button type="button" onClick={limparDia} style={pS.limparBtn}>
+              ✕ Limpar
+            </button>
+          )}
+        </div>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={exportarPeriodo}
+          disabled={exportando || vendasOrdenadas.length === 0}
+        >
+          {exportando ? 'Exportando...' : `Exportar PDF (${vendasOrdenadas.length})`}
+        </button>
+      </div>
+
+      {diaAtivo && (
+        <div style={pS.avisoDia}>
+          📅 Mostrando só o dia <strong>{diaSelecionado.split('-').reverse().join('/')}</strong> — os outros dias do mês estão ocultos.
+        </div>
+      )}
+
       <div className="table-wrap">
         <table>
           <thead>
@@ -345,7 +534,11 @@ export default function Vendas() {
             {vendasFiltradas.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--cinza)' }}>
-                  {vendas.length === 0 ? 'Nenhuma venda registrada' : 'Nenhuma venda encontrada'}
+                  {vendasDoPeriodo.length === 0
+                    ? (diaAtivo
+                        ? `Nenhuma venda registrada no dia ${diaSelecionado.split('-').reverse().join('/')}`
+                        : `Nenhuma venda registrada em ${NOMES_MESES[mesSelecionado]} de ${anoSelecionado}`)
+                    : 'Nenhuma venda encontrada com esse termo'}
                 </td>
               </tr>
             ) : (
@@ -488,5 +681,100 @@ const s = {
     marginBottom: 16,
     fontSize: '0.9rem',
     color: 'var(--texto)',
+  },
+}
+
+const pS = {
+  barraPeriodo: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 16,
+  },
+  wrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dataInputAtivo: {
+    borderColor: 'var(--terra)',
+    boxShadow: '0 0 0 3px rgba(196,98,45,0.1)',
+  },
+  avisoDia: {
+    fontSize: '0.8rem',
+    color: 'var(--terra)',
+    background: 'rgba(196,98,45,0.08)',
+    border: '1px solid rgba(196,98,45,0.2)',
+    borderRadius: 'var(--radius-md)',
+    padding: '8px 14px',
+    marginBottom: 16,
+  },
+  separador: {
+    fontSize: '0.78rem',
+    color: 'var(--cinza)',
+    margin: '0 4px',
+  },
+  dataLabel: {
+    fontSize: '0.78rem',
+    color: 'var(--cinza)',
+  },
+  anoInput: {
+    padding: '6px 10px',
+    fontSize: '0.82rem',
+    width: 76,
+  },
+  dataInput: {
+    padding: '6px 10px',
+    fontSize: '0.82rem',
+  },
+  limparBtn: {
+    marginLeft: 4,
+    padding: '5px 12px',
+    borderRadius: 'var(--radius-md)',
+    border: '1.5px solid var(--border)',
+    background: 'var(--bg-card)',
+    color: 'var(--cinza)',
+    fontSize: '0.76rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  setaBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 'var(--radius-md)',
+    border: '1.5px solid var(--border)',
+    background: 'var(--bg-card)',
+    color: 'var(--texto)',
+    fontSize: '1.1rem',
+    lineHeight: 1,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  setaBtnDisabled: {
+    opacity: 0.35,
+    cursor: 'not-allowed',
+  },
+  label: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: '1rem',
+    color: 'var(--escuro)',
+    fontWeight: 600,
+    minWidth: 140,
+    textAlign: 'center',
+  },
+  hojeBtn: {
+    marginLeft: 6,
+    padding: '5px 12px',
+    borderRadius: 'var(--radius-md)',
+    border: '1.5px solid var(--terra)',
+    background: 'transparent',
+    color: 'var(--terra)',
+    fontSize: '0.76rem',
+    fontWeight: 600,
+    cursor: 'pointer',
   },
 }
