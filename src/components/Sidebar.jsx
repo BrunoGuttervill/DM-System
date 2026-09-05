@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import {
   IconDashboard, IconBell, IconWheat, IconBox, IconClipboard,
   IconFactory, IconTruck, IconTrendingUp, IconSettings, IconLogo, IconLogout,
+  IconDollarSign,
 } from './Icons'
 
 
@@ -41,6 +42,12 @@ export default function Sidebar({ onLogout }) {
       links: [
         { id: 'receitas', icon: IconClipboard, label: 'Fichas Técnicas' },
         { id: 'producao', icon: IconFactory, label: 'Ordens de Produção' },
+      ],
+    },
+    {
+      section: 'Vendas',
+      links: [
+        { id: 'vendas', icon: IconDollarSign, label: 'Vendas' },
       ],
     },
     {
