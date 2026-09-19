@@ -18,10 +18,10 @@ function ModalProducao({ onClose, onSalvo }) {
   const [confirmando, setConfirmando] = useState(false)
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/produtos')
-      .then(r => r.json())
-      .then(data => setPizzas(data))
-  }, [])
+  fetch('http://localhost:3000/api/produtos/produziveis')
+    .then(r => r.json())
+    .then(data => setPizzas(data))
+}, [])
 
   const produtoSelecionado = pizzas.find(p => String(p.id) === String(pizzaId))
 
@@ -99,7 +99,6 @@ function ModalProducao({ onClose, onSalvo }) {
         <select value={pizzaId} onChange={e => setPizzaId(e.target.value)}>
           <option value="">Selecione um produto</option>
           {pizzas
-            .filter(p => p.status === 'ok')
             .map(p => <option key={p.id} value={p.id}>{p.nome} - {p.tipo}</option>)}
         </select>
       </div>
