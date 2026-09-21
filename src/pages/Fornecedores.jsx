@@ -24,7 +24,7 @@ function useFormFornecedor(inicial) {
 }
 
 function ModalFornecedor({ onClose, onSalvo }) {
-  const { showToast } = useApp()
+  const { showToast, token } = useApp()
   const { formData, errors, setErrors, handleChange, validate } = useFormFornecedor({
     nome: '', cnpj: '', telefone: '', email: '', insumos: '',
   })
@@ -41,7 +41,7 @@ function ModalFornecedor({ onClose, onSalvo }) {
     try {
       const res = await fetch('http://localhost:3000/api/fornecedor', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(formData),
       })
       if (!res.ok) throw new Error('Falha ao salvar')
@@ -111,7 +111,7 @@ function ModalFornecedor({ onClose, onSalvo }) {
 }
 
 function ModalEditarFornecedor({ fornecedor, onClose, onSalvo }) {
-  const { showToast } = useApp()
+  const { showToast, token } = useApp()
   const { formData, errors, setErrors, handleChange, validate } = useFormFornecedor({
     nome: fornecedor.nome || '',
     cnpj: fornecedor.cnpj || '',
@@ -132,7 +132,7 @@ function ModalEditarFornecedor({ fornecedor, onClose, onSalvo }) {
     try {
       const res = await fetch(`http://localhost:3000/api/fornecedor/${fornecedor.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(formData),
       })
       if (!res.ok) throw new Error('Falha ao salvar')
@@ -202,13 +202,16 @@ function ModalEditarFornecedor({ fornecedor, onClose, onSalvo }) {
 }
 
 function ModalConfirmarExclusao({ fornecedor, onClose, onExcluido }) {
-  const { showToast } = useApp()
+  const { showToast, token } = useApp()
   const [excluindo, setExcluindo] = useState(false)
 
   const confirmar = async () => {
     setExcluindo(true)
     try {
-      const res = await fetch(`http://localhost:3000/api/fornecedor/${fornecedor.id}`, { method: 'DELETE' })
+      const res = await fetch(`http://localhost:3000/api/fornecedor/${fornecedor.id}`, { 
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
       if (!res.ok) throw new Error('Falha ao excluir')
       onClose()
       showToast('🗑️ Fornecedor excluído.')
