@@ -29,7 +29,7 @@ const COR_CINZA = [122, 106, 90]
 function semEmoji(texto) {
   if (!texto) return texto
   return String(texto)
-    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]|\u{FE0F}|\u{200D}/gu, '')
     .trim()
 }
 
