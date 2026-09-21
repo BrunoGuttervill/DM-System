@@ -244,7 +244,7 @@ function ModalRegistrarVenda({ produtos, onClose, onSalvo }) {
       onClose()
       showToast(`✅ Venda registrada! Total: R$ ${Number(dados.total).toFixed(2)}`)
       await onSalvo()
-    } catch (err) {
+    } catch{
       setErro('Não foi possível conectar ao servidor.')
       setSalvando(false)
     }
@@ -356,7 +356,7 @@ function ModalConfirmarExclusao({ venda, onClose, onExcluido }) {
       onClose()
       showToast('🗑️ Venda excluída e estoque devolvido.')
       await onExcluido()
-    } catch (err) {
+    } catch{
       showToast('❌ Não foi possível excluir a venda. Tente novamente.')
       setExcluindo(false)
     }

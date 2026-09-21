@@ -116,7 +116,7 @@ export default function Login({ onLogin }) {
         return
       }
       onLogin?.(dados)
-    } catch (err) {
+    } catch {
       setCarregando(false)
       setErro('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
     }
@@ -141,7 +141,7 @@ export default function Login({ onLogin }) {
         return
       }
       setModo('confirmacao')
-    } catch (err) {
+    } catch {
       setCarregando(false)
       setErro('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
     }
@@ -422,7 +422,7 @@ function ModalCadastro({ onClose, onCriado }) {
 
       setCarregando(false)
       setSucesso(true)
-    } catch (err) {
+    } catch {
       setErro('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
       setCarregando(false)
     }

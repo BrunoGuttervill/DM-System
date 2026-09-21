@@ -95,7 +95,7 @@ function ModalNovoInsumo({ onClose, onCriado, categoriasSugeridas, fornecedores 
       onClose()
       showToast(`✅ ${formData.nome} cadastrado com sucesso!`)
       await onCriado()
-    } catch (err) {
+    } catch{
       showToast('❌ Não foi possível salvar o insumo. Tente novamente.')
     } finally {
       setSalvando(false)

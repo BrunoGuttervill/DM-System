@@ -48,7 +48,7 @@ function ModalFornecedor({ onClose, onSalvo }) {
       onClose()
       showToast('✅ Fornecedor cadastrado!')
       await onSalvo()
-    } catch (err) {
+    } catch {
       showToast('❌ Não foi possível cadastrar. Tente novamente.')
     } finally {
       setSalvando(false)
@@ -139,7 +139,7 @@ function ModalEditarFornecedor({ fornecedor, onClose, onSalvo }) {
       onClose()
       showToast(`✅ ${formData.nome} atualizado com sucesso!`)
       await onSalvo()
-    } catch (err) {
+    } catch {
       showToast('❌ Não foi possível salvar as alterações. Tente novamente.')
     } finally {
       setSalvando(false)
@@ -213,7 +213,7 @@ function ModalConfirmarExclusao({ fornecedor, onClose, onExcluido }) {
       onClose()
       showToast('🗑️ Fornecedor excluído.')
       await onExcluido()
-    } catch (err) {
+    } catch {
       showToast('❌ Não foi possível excluir. Tente novamente.')
       setExcluindo(false)
     }

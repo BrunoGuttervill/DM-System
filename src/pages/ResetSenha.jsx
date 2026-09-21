@@ -70,7 +70,7 @@ export default function ResetSenha({ token }) {
         return
       }
       setSucesso(true)
-    } catch (err) {
+    } catch {
       setCarregando(false)
       setErro('Não foi possível conectar ao servidor.')
     }

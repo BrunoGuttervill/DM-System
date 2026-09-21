@@ -127,7 +127,7 @@ function ModalFormFicha({ modo, fichaExistente, ingredientesExistentes, produtos
       onClose()
       showToast(modo === 'criar' ? '✅ Ficha técnica criada com sucesso!' : '✅ Ficha técnica atualizada!')
       await onSalvo()
-    } catch (err) {
+    } catch {
       setErro('Não foi possível conectar ao servidor.')
       setSalvando(false)
     }

@@ -40,7 +40,7 @@ function ModalProducao({ onClose, onSalvo }) {
       onClose()
       showToast('✅ Produção registrada! Insumos descontados automaticamente.')
       await onSalvo()
-    } catch (err) {
+    } catch {
       showToast('❌ Não foi possível registrar. Tente novamente.')
       setConfirmando(false)
     } finally {
@@ -154,7 +154,7 @@ function ModalEditarProducao({ ordem, onClose, onSalvo }) {
       onClose()
       showToast('✅ Produção atualizada com sucesso!')
       await onSalvo()
-    } catch (err) {
+    } catch{
       showToast('❌ Não foi possível salvar as alterações. Tente novamente.')
     } finally {
       setSalvando(false)
@@ -227,7 +227,7 @@ function ModalProduzirInsumo({ onClose, onSalvo }) {
       onClose()
       showToast('✅ Produção registrada! Massa adicionada ao estoque.')
       await onSalvo()
-    } catch (err) {
+    } catch {
       showToast('❌ Não foi possível registrar. Tente novamente.')
     } finally {
       setSalvando(false)

@@ -206,7 +206,7 @@ export default function Relatorios() {
       if (!gerar) throw new Error('Relatório não implementado')
       await gerar()
       showToast(`✅ PDF de "${r.titulo}" gerado com sucesso!`)
-    } catch (err) {
+    } catch{
       showToast('❌ Não foi possível gerar o PDF. Verifique se o backend está rodando.')
     } finally {
       setGerando(null)

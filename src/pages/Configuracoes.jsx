@@ -226,7 +226,7 @@ function ModalTrocarSenha({ usuarioId, onClose }) {
 
       onClose()
       showToast('✅ Senha alterada com sucesso!')
-    } catch (err) {
+    } catch {
       setErro('Não foi possível conectar ao servidor.')
       setSalvando(false)
     }
@@ -370,7 +370,7 @@ export default function Configuracoes({ onLogout }) {
 
       setUsuario(u => ({ ...u, ...dados }))
       showToast('✅ Foto de perfil atualizada!')
-    } catch (err) {
+    } catch {
       showToast('❌ Não foi possível conectar ao servidor.')
     }
   }
@@ -438,7 +438,7 @@ export default function Configuracoes({ onLogout }) {
       XLSX.writeFile(wb, `massastock-dados-${hoje}.xlsx`)
 
       showToast('✅ Dados exportados com sucesso!')
-    } catch (err) {
+    } catch{
       showToast('❌ Não foi possível exportar os dados. Verifique se o backend está rodando.')
     } finally {
       setExportando(false)
@@ -472,7 +472,7 @@ export default function Configuracoes({ onLogout }) {
 
       setUsuario(u => ({ ...u, ...dados }))
       showToast('✅ Configurações salvas!')
-    } catch (err) {
+    } catch {
       showToast('❌ Não foi possível conectar ao servidor.')
     } finally {
       setSalvandoPerfil(false)
